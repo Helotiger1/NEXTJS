@@ -1,0 +1,42 @@
+services:
+  app:
+    image: node:24    
+    container_name: node_app
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    command: npm run dev
+
+  postgres:
+    image: postgres:17
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data  
+
+  pgadmin:
+    image: dpage/pgadmin4       
+    container_name: pgadmin
+    environment:
+      DATABASE_URL: postgresql://root:secret@postgres:5432/mydb
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    volumes:
+    - pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  pgdata:
+  pgadmin_data:

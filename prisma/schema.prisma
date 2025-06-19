@@ -4,6 +4,7 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+
 generator client {
     provider = "prisma-client-js"
     output   = "../src/generated/prisma"
@@ -20,8 +21,8 @@ model Almacen {
     direccionId Int       @unique
     direccion   Direccion @relation(fields: [direccionId], references: [id])
     paquete     Paquete[]
-    origen      Envio?    @relation("Envio")
-    envio       Envio?    @relation("Origen")
+    origen      Envio[]    @relation("Envio")
+    envio       Envio[]    @relation("Origen")
 }
 
 model Direccion {
@@ -41,11 +42,13 @@ model Paquete {
     estado         String
     almacenCodigo  Int
     empleadoCedula String @unique
+    medidasId Int @unique
 
-    empleado Empleado @relation(fields: [empleadoCedula], references: [cedula])
+    medidas Medidas @relation(fields: [medidasId], references: [id])
     almacen  Almacen  @relation(fields: [almacenCodigo], references: [codigo])
+    empleado Empleado @relation(fields: [empleadoCedula], references: [cedula])
 
-    detalleEnvio   DetalleEnvio?
+    detalleEnvio   DetalleEnvio []
     DetalleFactura DetalleFactura?
 }
 
@@ -56,13 +59,14 @@ model Medidas {
     alto    Int
     peso    Int
     volumen Int
+    paquete Paquete?
 }
 
 model DetalleEnvio {
     id Int @id @default(autoincrement())
 
-    paqueteTracking Int @unique
-    envioNumero     Int @unique
+    paqueteTracking Int 
+    envioNumero     Int 
 
     paquete Paquete @relation(fields: [paqueteTracking], references: [tracking])
     envio   Envio   @relation(fields: [envioNumero], references: [numero])
@@ -104,8 +108,8 @@ model Envio {
     Origen Almacen @relation("Origen", fields: [almacenOrigen], references: [codigo])
     Envio  Almacen @relation("Envio", fields: [almacenEnvio], references: [codigo])
 
-    detalleEnvio DetalleEnvio?
-    Factura      Factura?
+    detalleEnvio DetalleEnvio[]
+    Factura      Factura[]
 }
 
 model Factura {
@@ -121,13 +125,13 @@ model Factura {
     cliente  Cliente @relation(fields: [clienteCedula], references: [cedula])
     envioNum Envio   @relation(fields: [envioNumero], references: [numero])
 
-    detalleFactura DetalleFactura?
+    detalleFactura DetalleFactura[]
 }
 
 model DetalleFactura {
     numero Int @id @default(autoincrement())
 
-    facturaNumero   Int @unique
+    facturaNumero   Int 
     paqueteTracking Int @unique
 
     factura Factura @relation(fields: [facturaNumero], references: [numero])

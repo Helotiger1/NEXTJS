@@ -1,7 +1,7 @@
 
 export default function Home() {
   return (
-    <div>Joder mamalo
+    <div className="text-white">Joder mamalo
     </div>
   );
 }

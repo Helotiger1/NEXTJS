@@ -1,15 +1,15 @@
 import { BaseLayout} from "../BaseLayout";
-import { SidebarItem } from "@/app/types/utils";
+import { SidebarConfig} from "@/app/types/utils";
 
-const clienteSidebar: SidebarItem[] = [
+const clienteSidebar: SidebarConfig= { SidebarItems: [
   { href: "/cliente/inicio", icon: "🏠", label: "Inicio" },
   { href: "/cliente/paquetes", icon: "📦", label: "Paquetes" },
   { href: "/cliente/facturas", icon: "🧾", label: "Facturas" },
   { href: "/cliente/envios", icon: "🚚", label: "Envíos" },
-];
+], profileURL : "/cliente/perfil"};
 
 export default function ClienteLayout({ children }: { children: React.ReactNode }) {
-  return <BaseLayout sidebarItems={clienteSidebar}>{children}</BaseLayout>;
+  return <BaseLayout  profileURL={clienteSidebar.profileURL} sidebarItems={clienteSidebar.SidebarItems}>{children}</BaseLayout>;
 }
 
 

@@ -1,9 +1,8 @@
-
 import { FormEvent } from "react";
 
 type Option = { value: string; label: string };
 
-type Field = {
+export type Field = {
   name: string;
   label: string;
   type: "text" | "email" | "select" | "checkbox";
@@ -24,7 +23,7 @@ export default function DynamicForm({ config, onSubmit }: DynamicFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-6 rounded-xl shadow-md border max-w-md mx-auto bg-white">
+    <form onSubmit={handleSubmit} className="space-y-4 p-6 rounded-xl shadow-md border max-w-md mx-auto">
       {config.map((field) => (
         <div key={field.name} className="flex flex-col">
           {field.type !== "checkbox" && (

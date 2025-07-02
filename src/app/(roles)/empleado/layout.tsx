@@ -8,6 +8,7 @@ const clienteSidebar: SidebarConfig = {SidebarItems: [
     { href: "/empleado/asociar", icon: "🧾", label: "Asociar" },
     { href: "/empleado/paquetes", icon: "📦", label: "Paquetes" },
     { href: "/empleado/clientes", icon: "nose", label: "Clientes" },
+    { href: "/admin/inicio", icon: "xd", label: "Seccion admin" }
 ],
 profileURL : "/empleado/perfil"};
 

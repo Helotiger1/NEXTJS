@@ -9,6 +9,7 @@ const clienteSidebar : SidebarConfig = {SidebarItems: [
     { href: "/admin/paquetes", icon: "📦", label: "Paquetes" },
     { href: "/admin/clientes", icon: "nose", label: "Clientes" },
     { href: "/admin/facturas", icon: "nose", label: "Facturas" },
+    { href: "/empleado/inicio", icon: "xd", label: "Seccion empleados" }
 ], profileURL : "/admin/perfil"};
 
 export default function ClienteLayout({

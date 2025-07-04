@@ -1,23 +1,14 @@
 "use client"
 import { useState } from "react";
+import {DynamicTableProps} from "./types"
 
-type Column<T> = {
-  key: keyof T | string;
-  label: string;
-  render?: (value: any, row: T) => React.ReactNode;
-};
-
-type DynamicTableProps<T> = {
-  columns: Column<T>[];
-  data: T[];
-  rowsPerPage?: number;
-};
 
 export default function DynamicTable<T extends object>({
   columns,
   data,
   rowsPerPage = 5,
 }: DynamicTableProps<T>) {
+  
   const [page, setPage] = useState(0);
   const totalPages = Math.ceil(data.length / rowsPerPage);
 
@@ -29,6 +20,7 @@ export default function DynamicTable<T extends object>({
   return (
     <div className="space-y-4">
       <table className="min-w-full table-auto border-collapse border border-gray-300">
+
         <thead>
           <tr>
             {columns.map((col) => (
@@ -38,6 +30,7 @@ export default function DynamicTable<T extends object>({
             ))}
           </tr>
         </thead>
+
         <tbody>
           {paginatedData.map((row, idx) => (
             <tr key={idx} className="even:bg-gray-800">
@@ -70,63 +63,10 @@ export default function DynamicTable<T extends object>({
           Siguiente
         </button>
       </div>
+      
     </div>
   );
 }
 
 
 
-const data = [
-  { id: 1, name: "Carlos", email: "carlos@mail.com" },
-  { id: 2, name: "Laura", email: "laura@mail.com" },
-  { id: 3, name: "Ana", email: "ana@mail.com" },
-  { id: 4, name: "Pedro", email: "pedro@mail.com" },
-  { id: 5, name: "María", email: "maria@mail.com" },
-  { id: 6, name: "Luis", email: "luis@mail.com" },
-  { id: 1, name: "Carlos", email: "carlos@mail.com" },
-  { id: 2, name: "Laura", email: "laura@mail.com" },
-  { id: 3, name: "Ana", email: "ana@mail.com" },
-  { id: 4, name: "Pedro", email: "pedro@mail.com" },
-  { id: 5, name: "María", email: "maria@mail.com" },
-  { id: 6, name: "Luis", email: "luis@mail.com" },
-  { id: 1, name: "Carlos", email: "carlos@mail.com" },
-  { id: 2, name: "Laura", email: "laura@mail.com" },
-  { id: 3, name: "Ana", email: "ana@mail.com" },
-  { id: 4, name: "Pedro", email: "pedro@mail.com" },
-  { id: 5, name: "María", email: "maria@mail.com" },
-  { id: 6, name: "Luis", email: "luis@mail.com" },
-  { id: 1, name: "Carlos", email: "carlos@mail.com" },
-  { id: 2, name: "Laura", email: "laura@mail.com" },
-  { id: 3, name: "Ana", email: "ana@mail.com" },
-  { id: 4, name: "Pedro", email: "pedro@mail.com" },
-  { id: 5, name: "María", email: "maria@mail.com" },
-  { id: 6, name: "Luis", email: "luis@mail.com" },
-  { id: 1, name: "Carlos", email: "carlos@mail.com" },
-  { id: 2, name: "Laura", email: "laura@mail.com" },
-  { id: 3, name: "Ana", email: "ana@mail.com" },
-  { id: 4, name: "Pedro", email: "pedro@mail.com" },
-  { id: 5, name: "María", email: "maria@mail.com" },
-  { id: 6, name: "Luis", email: "luis@mail.com" },
-
-];
-
-const columns = [
-  { key: "name", label: "Nombre" },
-  { key: "email", label: "Correo" },
-  {
-    key: "acciones",
-    label: "Acciones",
-    render: (_: any, row: any) => (
-      <button
-        onClick={() => alert(`Detalles de ${row.name}`)}
-        className="text-blue-600 underline"
-      >
-        Ver detalles
-      </button>
-    )
-  }
-];
-
-export function App() {
-  return <DynamicTable columns={columns} data={data} rowsPerPage={9} />;
-}

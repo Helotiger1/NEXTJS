@@ -1,4 +1,5 @@
-import DynamicForm, { Field } from '@/app/(roles)/(shared)/components/forms/DynamicForm';
+import DynamicForm from '@/app/(roles)/(shared)/components/forms/DynamicForm';
+import { Field } from '@/app/(roles)/(shared)/components/forms/types';
 
 export function RegisterPackageForm() {
 

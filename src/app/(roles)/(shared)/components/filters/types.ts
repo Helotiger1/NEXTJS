@@ -1,5 +1,11 @@
 export type FilterType = "select" | "checkbox" | "range";
 
+export interface Props {
+  filters: FilterConfig[];
+  values: FilterState;
+  onChange: (key: string, value: FilterState[string]) => void;
+} 
+
 export interface BaseFilter {
   key: string;
   label: string;

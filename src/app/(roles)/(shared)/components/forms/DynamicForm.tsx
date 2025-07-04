@@ -1,21 +1,9 @@
 import { FormEvent } from "react";
+import {DynamicFormProps} from "./types"
 
-type Option = { value: string; label: string };
-
-export type Field = {
-  name: string;
-  label: string;
-  type: "text" | "email" | "select" | "checkbox";
-  options?: Option[];
-};
-
-type DynamicFormProps = {
-  config: Field[];
-  onSubmit: (data: Record<string, any>) => void;
-};
-
-export default function DynamicForm({ config, onSubmit }: DynamicFormProps) {
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+export default function DynamicForm({ config, onSubmit, onCancel }: DynamicFormProps) {
+  
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData);
@@ -36,7 +24,7 @@ export default function DynamicForm({ config, onSubmit }: DynamicFormProps) {
             <select
               id={field.name}
               name={field.name}
-              className="border rounded-md px-3 py-2"
+              className="bg-black border rounded-md px-3 py-2"
             >
               {field.options?.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -63,6 +51,11 @@ export default function DynamicForm({ config, onSubmit }: DynamicFormProps) {
       <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-md">
         Enviar
       </button>
+
+      {onCancel && (<button type="button" onClick={onCancel} className="bg-blue-600 text-white px-4 py-2 rounded-md">
+        Cancelar
+      </button>)}
+      
     </form>
   );
 }

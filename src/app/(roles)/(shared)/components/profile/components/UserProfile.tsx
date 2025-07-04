@@ -1,11 +1,7 @@
-
 import React from "react";
 import  UserHeader  from "./UserHeader";
 import  UserInfo  from "./UserInfo";
 import EditButton from "./ui/EditButton";
-
-
-
 
 export default function UserProfile() {
 

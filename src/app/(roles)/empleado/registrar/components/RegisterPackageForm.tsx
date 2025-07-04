@@ -1,40 +1,66 @@
-import DynamicForm, { Field } from '@/app/(roles)/(shared)/components/forms/DynamicForm';
+import DynamicForm from "@/app/(roles)/(shared)/components/forms/DynamicForm";
+import { packageFormConfig } from "../configs";
+import { columns, data } from "../config";
+
+import DynamicTable from "@/app/(roles)/(shared)/components/tables/DynamicTable";
+import { useState } from "react";
 
 export function RegisterPackageForm() {
+    const [meterPaquete, setMeterPaquete] = useState(false);
 
+    const handleAgregar = (e: React.MouseEvent<HTMLButtonElement>) => {
+        setMeterPaquete(true);
+    };
 
-  const formConfig : Field[] = [
-  {
-    name: "1",
-    label: "Remitente",
-    type: "text",
-  },
-  {
-    name: "2",
-    label: "Destinatario",
-    type: "text",
-  },
-  {
-    name: "3",
-    label: "Peso",
-    type: "text",
-  },
-  {
-    name: "4",
-    label: "Tamaño",
-    type: "text",
-  },
-  {
-    name: "5",
-    label: "Direccion",
-    type: "text",
-  },
-];
+    const onCancel = (e: React.MouseEvent<HTMLButtonElement> ) => {
+        setMeterPaquete(false)
+    };
 
-  return (
-    <DynamicForm config={formConfig} onSubmit={()=>{}}></DynamicForm>
-  )
+    const onSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        setMeterPaquete(false);
+    };
+
+    const handleGenerarFactura = (e: React.MouseEvent<HTMLButtonElement>) => {
+        //Logica de api, cuando exista.
+    }
+    
+    if (meterPaquete) {
+        return (
+            <DynamicForm
+                config={packageFormConfig}
+                onSubmit={() => {}} onCancel={onCancel}></DynamicForm>
+        );
+    }
+
+    return (
+        <>
+        <div className="mb-4">
+  <label className="block text-sm font-medium text-gray-100 mb-2">
+    Cedula a la que asociar factura
+  </label>
+  <input
+    type="text"
+    placeholder="Ej: 12345678"
+    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+  />
+</div>
+            <button
+                type="button"
+                onClick={handleAgregar}
+                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors">
+                Agregar paquete
+            </button>
+            <button
+                type="button"
+                onClick={handleGenerarFactura}
+                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors">
+                Generar factura.
+            </button>
+            <DynamicTable
+                data={data}
+                columns={columns}
+                rowsPerPage={2}></DynamicTable>
+        </>
+    );
 }
-
-
-

@@ -1,21 +1,31 @@
-import { BaseLayout } from "../BaseLayout";
-import { SidebarConfig, SidebarItem } from "@/app/types/utils";
+"use client";
 
-const clienteSidebar: SidebarConfig = {SidebarItems: [
+import { BaseLayout } from "../BaseLayout";
+import { SidebarConfig } from "@/app/types/utils";
+
+const clienteSidebar: SidebarConfig = {
+  SidebarItems: [
     { href: "/empleado/inicio", icon: "🏠", label: "Inicio" },
-    { href: "/empleado/registrar", icon: "🚚", label: "Registrar" },
-    { href: "/empleado/estado", icon: "nose", label: "Estado" },
-    { href: "/empleado/asociar", icon: "🧾", label: "Asociar" },
-    { href: "/empleado/paquetes", icon: "📦", label: "Paquetes" },
-    { href: "/empleado/clientes", icon: "nose", label: "Clientes" },
-    { href: "/admin/inicio", icon: "xd", label: "Seccion admin" }
-],
-profileURL : "/empleado/perfil"};
+    { href: "/empleado/registrar", icon: "📦", label: "Registrar paquetes y facturas" },
+    { href: "/empleado/envios", icon: "✈️", label: "Envios" },
+    { href: "/empleado/estado", icon: "📍", label: "Estado de envios" },
+    { href: "/empleado/clientes", icon: "👥", label: "Clientes" },
+    { href: "/admin/inicio", icon: "🛡️", label: "Sección admin" },
+  ],
+  profileURL: "/empleado/perfil",
+};
 
 export default function ClienteLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    return <BaseLayout profileURL={clienteSidebar.profileURL} sidebarItems={clienteSidebar.SidebarItems}>{children}</BaseLayout>;
+  return (
+    <BaseLayout
+      profileURL={clienteSidebar.profileURL}
+      sidebarItems={clienteSidebar.SidebarItems}
+    >
+      {children}
+    </BaseLayout>
+  );
 }

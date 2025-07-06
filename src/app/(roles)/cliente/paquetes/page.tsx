@@ -1,8 +1,12 @@
-import React from 'react'
-import { PackageTable } from './components/PackageTable'
+import React from "react";
+import { PackageTable } from "./components/PackageTable";
+import DynamicHeader from "../components/DynamicHeader";
 
 export default function page() {
-  return (
-    <PackageTable></PackageTable>
-  )
+    return (
+        <>
+            <DynamicHeader h1Text="Tus paquetes"></DynamicHeader>
+            <PackageTable></PackageTable>
+        </>
+    );
 }

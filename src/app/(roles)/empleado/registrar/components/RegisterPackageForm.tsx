@@ -1,6 +1,5 @@
 import DynamicForm from "@/app/(roles)/(shared)/components/forms/DynamicForm";
-import { packageFormConfig } from "../configs";
-import { columns, data } from "../config";
+import { columns, data, packageFormConfig } from "../config";
 
 import DynamicTable from "@/app/(roles)/(shared)/components/tables/DynamicTable";
 import { useState } from "react";

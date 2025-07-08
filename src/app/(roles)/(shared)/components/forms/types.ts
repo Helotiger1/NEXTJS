@@ -3,7 +3,7 @@ export type Option = { value: string; label: string };
 export type Field = {
   name: string;
   label: string;
-  type: "text" | "email" | "select" | "checkbox";
+  type: "text" | "email" | "select" | "checkbox" | "number";
   options?: Option[];
 };
 

@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
       rol = 'CLIENTE',
     } = body;
 
+    console.log(body);
     // Validaciones básicas
     if (!cedula || !nombre || !apellido || !email || !telefono || !contraseña) {
       return NextResponse.json({ error: 'Todos los campos son obligatorios' }, { status: 400 });

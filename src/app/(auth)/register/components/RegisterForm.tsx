@@ -1,108 +1,129 @@
+"use client";
 import Link from "next/link";
+import { useState } from "react";
 
-export type RegisterFormProps = {
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+type RegisterFormProps = {
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  form: {
+    name: string;
+    email: string;
+    password: string;
+    confirm: string;
+  };
 };
 
-export const RegisterForm = ({ onChange, onSubmit }: RegisterFormProps) => {
-    return (
-       <div className="flex min-h-screen items-center justify-center p-4">
-    <form
-        onSubmit={onSubmit}
-        className="w-full max-w-xs space-y-3 rounded-xl bg-white p-4 shadow text-black">
-        <h2 className="text-center text-xl font-semibold">Registrarse</h2>
+function FloatingLabelInput({
+  label,
+  name,
+  type = "text",
+  value,
+  onChange,
+}: {
+  label: string;
+  name: string;
+  type?: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
+  const [isFocused, setIsFocused] = useState(false);
+  const showLabel = isFocused || value !== "";
 
-        <div>
-            <label className="block text-sm font-medium">Nombre</label>
-            <input
-                type="text"
-                name="firstName"
-                className="mt-1 w-full rounded-md border-[0.5px] px-3 py-1.5 text-xs border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                onChange={onChange}
-                required
-            />
+  return (
+    <div className="relative w-full">
+      <input
+        name={name}
+        type={type}
+        value={value}
+        onChange={onChange}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        className="peer w-full border-b border-gray-500 bg-transparent px-1 pt-6 pb-2 text-white placeholder-transparent focus:border-purple-400 focus:outline-none focus:ring-0"
+        placeholder={label}
+        required
+      />
+      <label
+        className={`absolute left-1 text-sm transition-all ${
+          showLabel
+            ? "text-purple-400 text-xs -top-1"
+            : "text-gray-400 top-6"
+        }`}
+      >
+        {label}
+      </label>
+    </div>
+  );
+}
+
+export const RegisterForm = ({ onChange, onSubmit, form }: RegisterFormProps) => {
+  return (
+    <div className="relative min-h-screen bg-black text-white flex items-center justify-center overflow-hidden">
+      {/* Fondo morado degradado diagonal al lado derecho */}
+      <div className="absolute inset-0 bg-gradient-to-b from-purple-800 to-black clip-diagonal z-0 hidden md:block transform scale-x-[-1]" />
+
+      {/* Bienvenida a la derecha */}
+      <div className="absolute inset-0 z-10 hidden md:flex items-center justify-end px-20">
+        <div className="max-w-md text-right">
+          <h2 className="text-4xl font-bold mb-4">¡Crea tu cuenta!</h2>
+          <p className="text-lg text-gray-200">
+            Regístrate para comenzar a rastrear tus paquetes, pagar tus facturas y más.
+          </p>
         </div>
+      </div>
 
-        <div>
-            <label className="block text-sm font-medium">Apellido</label>
-            <input
-                type="text"
-                name="lastName"
-                className="mt-1 w-full rounded-md border-[0.5px] px-3 py-1.5 text-xs border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                onChange={onChange}
-                required
+      {/* Formulario a la izquierda */}
+      <div className="relative z-20 flex justify-start w-full px-8">
+        <div className="max-w-sm w-full bg-transparent p-6 space-y-6">
+          <form onSubmit={onSubmit} className="space-y-6">
+            <h2 className="text-2xl font-semibold text-white text-center">Crear cuenta</h2>
+
+            <FloatingLabelInput
+              name="name"
+              label="Nombre completo"
+              value={form.name}
+              onChange={onChange}
             />
-        </div>
 
-        <div>
-            <label className="block text-sm font-medium">Cédula</label>
-            <input
-                type="text"
-                name="ci"
-                className="mt-1 w-full rounded-md border-[0.5px] px-3 py-1.5 text-xs border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                onChange={onChange}
-                required
+            <FloatingLabelInput
+              name="email"
+              label="Correo electrónico"
+              type="email"
+              value={form.email}
+              onChange={onChange}
             />
-        </div>
 
-        <div>
-            <label className="block text-sm font-medium">Teléfono</label>
-            <input
-                type="tel"
-                name="phone"
-                className="mt-1 w-full rounded-md border-[0.5px] px-3 py-1.5 text-xs border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                onChange={onChange}
-                required
+            <FloatingLabelInput
+              name="password"
+              label="Contraseña"
+              type="password"
+              value={form.password}
+              onChange={onChange}
             />
-        </div>
 
-        <div>
-            <label className="block text-sm font-medium">Email</label>
-            <input
-                type="email"
-                name="email"
-                className="mt-1 w-full rounded-md border-[0.5px] px-3 py-1.5 text-xs border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                onChange={onChange}
-                required
+            <FloatingLabelInput
+              name="confirm"
+              label="Confirmar contraseña"
+              type="password"
+              value={form.confirm}
+              onChange={onChange}
             />
-        </div>
 
-        <div>
-            <label className="block text-sm font-medium">Contraseña</label>
-            <input
-                type="password"
-                name="password"
-                className="mt-1 w-full rounded-md border-[0.5px] px-3 py-1.5 text-xs border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                onChange={onChange}
-                required
-            />
-        </div>
+            <button
+              type="submit"
+              className="w-full rounded-md bg-purple-700 py-2 text-white font-semibold hover:bg-purple-800 transition"
+            >
+              Registrarse
+            </button>
 
-        <div>
-            <label className="block text-sm font-medium">Confirmar contraseña</label>
-            <input
-                type="password"
-                name="confirmPassword"
-                className="mt-1 w-full rounded-md border-[0.5px] px-3 py-1.5 text-xs border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                onChange={onChange}
-                required
-            />
-        </div>
-
-        <button
-            type="submit"
-            className="w-full rounded-md bg-blue-600 py-1.5 text-sm text-white hover:bg-blue-700 transition">
-            Registrarse
-        </button>
-        <p className="text-sm text-center">
-            ¿Ya estás registrado?{" "}
-            <Link href="/login" className="text-blue-900 hover:underline">
+            <p className="text-sm text-center">
+              ¿Ya tienes cuenta?{" "}
+              <Link href="/login" className="underline text-purple-300 hover:text-white">
                 Inicia sesión
-            </Link>
-        </p>
-    </form>
-</div>
-
-    );
+              </Link>
+            </p>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
 };

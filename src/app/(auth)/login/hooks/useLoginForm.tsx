@@ -7,7 +7,7 @@ export function useLoginForm() {
   const tipo = searchParams.get("tipo"); // "clientee" o "empleado"
 
   const [form, setForm] = useState({
-    ci: "",
+    email: "",
     password: "",
   });
 

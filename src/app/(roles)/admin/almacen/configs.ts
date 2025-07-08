@@ -2,33 +2,38 @@
  
  export const formConfig: Field[] = [
         {
-            name: "1",
+            name: "linea1",
             label: "Linea 1",
             type: "text",
         },
         {
-            name: "2",
+            name: "linea2",
             label: "Linea 2",
             type: "text",
         },
         {
-            name: "3",
+            name: "pais",
             label: "Pais",
             type: "text",
         },
         {
-            name: "4",
+            name: "estado",
             label: "Estado",
             type: "text",
         },
         {
-            name: "5",
+            name: "ciudad",
             label: "Ciudad",
             type: "text",
         },
         {
-            name: "6",
+            name: "codigoPostal",
             label: "Codigo Postal",
+            type: "text",
+        },
+        {
+            name: "telefono",
+            label: "Telefono",
             type: "text",
         },
         

@@ -1,38 +1,43 @@
 import { Field } from "@/app/(roles)/(shared)/components/forms/types";
 export const registerUserFormConfig: Field[] = [
     {
-        name: "1",
+        name: "nombre",
         label: "Nombre",
         type: "text",
     },
     {
-        name: "2",
+        name: "apellido",
+        label: "Apellido",
+        type: "text",
+    },
+    {
+        name: "cedula",
+        label: "Cedula",
+        type: "text",
+    },
+    {
+        name: "telefono",
         label: "Telefono",
         type: "text",
     },
     {
-        name: "3",
+        name: "email",
         label: "Correo",
         type: "email",
     },
     {
-        name: "4",
+        name: "contraseña",
         label: "Contraseña",
         type: "text",
     },
     {
-        name: "5",
-        label: "Confirmar contraseña",
-        type: "text",
-    },
-    {
-        name: "6",
+        name: "rol",
         label: "Rol",
         type: "select",
         options: [
-            { value: "Administrador", label: "Administrador" },
-            { value: "Cliente", label: "Cliente" },
-            { value: "Empleado", label: "Empleado" },
+            { value: "ADMIN", label: "Administrador" },
+            { value: "CLIENTE", label: "Cliente" },
+            { value: "EMPLEADO", label: "Empleado" },
         ],
     },
 ];

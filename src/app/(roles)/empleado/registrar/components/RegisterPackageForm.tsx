@@ -1,62 +1,32 @@
 import DynamicForm from "@/app/(roles)/(shared)/components/forms/DynamicForm";
-import { packageFormConfig } from "../configs";
-import { columns, data } from "../config";
-
+import { packageFormConfig } from "../config";
+import usePackageForm from "../usePackageForm";
+import { CedulaFilter } from "@/app/(roles)/(shared)/components/filters/CedulaFilter";
 import DynamicTable from "@/app/(roles)/(shared)/components/tables/DynamicTable";
-import { useState } from "react";
+import { GenericButton } from "@/app/(roles)/(shared)/components/buttons/GenericButton";
+import { data,columns } from "../config";
+import useBills from "../useBills";
+
 
 export function RegisterPackageForm() {
-    const [meterPaquete, setMeterPaquete] = useState(false);
 
-    const handleAgregar = (e: React.MouseEvent<HTMLButtonElement>) => {
-        setMeterPaquete(true);
-    };
+   const {handleAgregar, meterPaquete, onSubmit, onCancel}= usePackageForm();
+    const {handleFactura} = useBills();
 
-    const onCancel = (e: React.MouseEvent<HTMLButtonElement> ) => {
-        setMeterPaquete(false)
-    };
 
-    const onSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.preventDefault();
-        setMeterPaquete(false);
-    };
-
-    const handleGenerarFactura = (e: React.MouseEvent<HTMLButtonElement>) => {
-        //Logica de api, cuando exista.
-    }
-    
     if (meterPaquete) {
         return (
             <DynamicForm
                 config={packageFormConfig}
-                onSubmit={() => {}} onCancel={onCancel}></DynamicForm>
+                onSubmit={onSubmit} onCancel={onCancel}></DynamicForm>
         );
     }
 
     return (
         <>
-        <div className="mb-4">
-  <label className="block text-sm font-medium text-gray-100 mb-2">
-    Cedula a la que asociar factura
-  </label>
-  <input
-    type="text"
-    placeholder="Ej: 12345678"
-    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-  />
-</div>
-            <button
-                type="button"
-                onClick={handleAgregar}
-                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors">
-                Agregar paquete
-            </button>
-            <button
-                type="button"
-                onClick={handleGenerarFactura}
-                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors">
-                Generar factura.
-            </button>
+        <CedulaFilter></CedulaFilter>
+            <GenericButton handleAction={handleAgregar} content="Agregar paquete" type="button"></GenericButton>
+            <GenericButton handleAction={handleFactura} type="button" content="Generar factura"></GenericButton>
             <DynamicTable
                 data={data}
                 columns={columns}

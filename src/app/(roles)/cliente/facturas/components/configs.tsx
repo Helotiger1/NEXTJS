@@ -49,4 +49,16 @@ export const columns = [
       </button>
     ),
   },
+    {
+    key: "acciones",
+    label: "Acciones",
+    render: (_: any, row: any) => (
+      <button
+        onClick={() => alert(`Detalles de (Aqui ira detalles) ${row.name}`)}
+        className="text-blue-600 underline"
+      >
+        Ver detalles
+      </button>
+    ),
+  },
 ];

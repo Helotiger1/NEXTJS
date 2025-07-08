@@ -1,6 +1,6 @@
 "use client"
 import DynamicTable from "@/app/(roles)/(shared)/components/tables/DynamicTable";
-import { columns, data } from "../config";
+import { columns, data } from "../configs";
 
 export const ShipmentsTable = () => {
     

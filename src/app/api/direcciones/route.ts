@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
-
+    console.log(data)
     // Validar datos
     const error = validarDireccion(data as DireccionInput);
     if (error) {

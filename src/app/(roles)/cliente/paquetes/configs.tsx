@@ -33,23 +33,11 @@ export const data = [
 
     export const columns = [
   { key: "name", label: "Tracking" },
+  { key: "alto", label: "Alto" },
+  { key: "peso", label: "Peso" },
   { key: "descripcion", label: "Descripción" },
+  { key: "fecha", label: "Fecha" },
   { key: "origen", label: "Origen" },
   { key: "destino", label: "Destino" },
   { key: "estado", label: "Estado" },
-  { key: "peso", label: "Peso" },
-  { key: "alto", label: "Alto" },
-  { key: "fecha", label: "Fecha" },
-  {
-    key: "acciones",
-    label: "Acciones",
-    render: (_: any, row: any) => (
-      <button
-        onClick={() => alert(`Detalles de (Aqui ira detalles) ${row.name}`)}
-        className="text-blue-600 underline"
-      >
-        Ver detalles
-      </button>
-    ),
-  },
 ];

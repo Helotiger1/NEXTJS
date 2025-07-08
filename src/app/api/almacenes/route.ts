@@ -3,40 +3,51 @@ import { PrismaClient } from '@prisma/client';
 import {
   validarTelefono,
 } from "@/app/lib/Validaciones_Almacenes";
+import { DireccionInput } from "@/app/lib/Validaciones_Direcciones";
 
 const prisma = new PrismaClient();
 
 // POST /api/almacenes - crear un nuevo almacén
 export async function POST(request: Request) {
   try {
-    const data = await request.json();
+    const body = await request.json();
 
-    // Validar telefono
-    const errorTelefono = validarTelefono(data.telefono);
+    const { telefono, direccion } = body;
+
+    // Validar teléfono
+    const errorTelefono = validarTelefono(telefono);
     if (errorTelefono) {
       return NextResponse.json({ error: errorTelefono }, { status: 400 });
     }
 
-    // Validar que direccionId exista
-    if (!data.direccionId || typeof data.direccionId !== 'number') {
-      return NextResponse.json({ error: "direccionId es obligatorio y debe ser un número" }, { status: 400 });
+    if (typeof direccion.codigoPostal !== 'number') {
+  const convertido = Number(direccion.codigoPostal);
+
+  if (isNaN(convertido)) {
+    throw new Error("El código postal debe ser un número válido.");
+  }
+
+  direccion.codigoPostal = convertido;
+}
+    // Validar datos mínimos de dirección
+    if (!direccion || typeof direccion !== "object") {
+      return NextResponse.json({ error: "Dirección inválida o ausente" }, { status: 400 });
     }
 
-    const direccionExistente = await prisma.direccion.findUnique({
-      where: { id: data.direccionId }
+    // Crear dirección primero
+    const nuevaDireccion = await prisma.direccion.create({
+      data: direccion,
     });
 
-    if (!direccionExistente) {
-      return NextResponse.json({ error: "La dirección indicada no existe" }, { status: 400 });
-    }
-
-    // Crear almacén apuntando a dirección existente
+    // Crear almacén apuntando a la dirección creada
     const nuevoAlmacen = await prisma.almacen.create({
       data: {
-        telefono: data.telefono,
-        direccionId: data.direccionId,
+        telefono,
+        direccionId: nuevaDireccion.id,
       },
-      include: { direccion: true },
+      include: {
+        direccion: true,
+      },
     });
 
     return NextResponse.json(nuevoAlmacen, { status: 201 });

@@ -1,13 +1,15 @@
-"use client"
+"use client";
 import { RegisterForm } from "./components/RegisterForm";
 import { useRegisterForm } from "./hooks/useRegisterForm";
 
+export default function RegisterPage() {
+  const { form, handleChange, handleSubmit } = useRegisterForm();
 
-export function Register() {
-    const {handleChange, handleSubmit} = useRegisterForm();
-    return <RegisterForm onChange={handleChange} onSubmit={handleSubmit}></RegisterForm>
+  return (
+    <RegisterForm
+      form={form}
+      onChange={handleChange}
+      onSubmit={handleSubmit}
+    />
+  );
 }
-
-export default Register;
-
-

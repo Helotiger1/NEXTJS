@@ -1,12 +1,15 @@
-"use client"
+"use client";
 import { LoginForm } from "./components/LoginForm";
 import { useLoginForm } from "./hooks/useLoginForm";
 
-export function Login() {
-    const {handleChange, handleSubmit} = useLoginForm()
-    return <LoginForm onChange={handleChange} onSubmit={handleSubmit}></LoginForm>
+export default function LoginPage() {
+  const { handleChange, handleSubmit, form } = useLoginForm();
+
+  return (
+    <LoginForm
+      onChange={handleChange}
+      onSubmit={handleSubmit}
+      form={form}
+    />
+  );
 }
-
-export default Login;
-
-

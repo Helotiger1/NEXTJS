@@ -6,10 +6,10 @@ export function useLoginForm() {
   const searchParams = useSearchParams();
   const tipo = searchParams.get("tipo"); // "clientee" o "empleado"
 
-  const [form, setForm] = useState({
-    ci: "",
-    password: "",
-  });
+ const [form, setForm] = useState({
+  email: "",
+  password: "",
+});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });

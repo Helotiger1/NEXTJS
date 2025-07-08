@@ -78,11 +78,12 @@ export const LoginForm = ({ onChange, onSubmit, form }: LoginFormProps) => {
             <h2 className="text-2xl font-semibold text-white text-center">Iniciar sesión</h2>
 
             <FloatingLabelInput
-              name="ci"
-              label="Cédula"
-              value={form.ci}
-              onChange={onChange}
-            />
+  name="email"
+  label="Correo electrónico"
+  type="email"
+  value={form.email}
+  onChange={onChange}
+/>
 
             <FloatingLabelInput
               name="password"

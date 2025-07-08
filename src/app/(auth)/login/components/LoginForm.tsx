@@ -11,7 +11,7 @@ export type LoginFormProps = {
   };
 };
 
-// Componente de input con etiqueta flotante
+// Componente de input con etiqueta flotantee
 function FloatingLabelInput({
   label,
   name,

@@ -1,25 +1,35 @@
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-export function useRegisterForm(){
-        const [form, setForm] = useState({
-        firstName: '',
-        lastName: '',
-        ci: '',
-        phone: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-    });
+export function useRegisterForm() {
+  const router = useRouter();
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        e.preventDefault();
-        setForm({...form, [e.target.name] : e.target.value});
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirm: "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (form.password !== form.confirm) {
+      alert("Las contraseñas no coinciden.");
+      return;
     }
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-    };
+    // Aquí iría el fetch a la API o lógica para registrar
+    router.push("/login");
+  };
 
-    return {handleChange, handleSubmit}
-
+  return {
+    form,
+    handleChange,
+    handleSubmit,
+  };
 }

@@ -1,6 +1,6 @@
 import { createCrudService } from "./createCrudService";
 export interface Almacen {
-    id: string;
+    codigo: string;
     telefono: string;
     direccion: {
         linea1: String;

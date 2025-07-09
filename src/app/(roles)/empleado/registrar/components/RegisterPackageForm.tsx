@@ -1,20 +1,20 @@
 import DynamicForm from "@/app/(roles)/(shared)/components/forms/DynamicForm";
 import { packageFormConfig } from "../config";
-import usePackageForm from "../usePackageForm";
 import { CedulaFilter } from "@/app/(roles)/(shared)/components/filters/CedulaFilter";
 import DynamicTable from "@/app/(roles)/(shared)/components/tables/DynamicTable";
 import { GenericButton } from "@/app/(roles)/(shared)/components/buttons/GenericButton";
 import { data,columns } from "../config";
 import useBills from "../useBills";
+import useForm from "@/app/(roles)/(shared)/hooks/useForm";
 
 
 export function RegisterPackageForm() {
 
-   const {handleAgregar, meterPaquete, onSubmit, onCancel}= usePackageForm();
+   const {handleAgregar, showForm, onSubmit, onCancel}= useForm();
     const {handleFactura} = useBills();
 
 
-    if (meterPaquete) {
+    if (showForm) {
         return (
             <DynamicForm
                 config={packageFormConfig}

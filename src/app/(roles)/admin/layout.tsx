@@ -6,8 +6,8 @@ import { SidebarConfig } from "@/app/types/utils";
 const clienteSidebar: SidebarConfig = {
   SidebarItems: [
     { href: "/admin/inicio", icon: "🏠", label: "Inicio" },
-    { href: "/admin/usuarios", icon: "👤", label: "Registrar usuarios" },
-    { href: "/admin/almacen", icon: "🧾", label: "Registrar almacenes" },
+    { href: "/admin/usuarios", icon: "👤", label: "Usuarios" },
+    { href: "/admin/almacen", icon: "🧾", label: "Almacenes" },
     { href: "/empleado/inicio", icon: "👥", label: "Sección empleados" },
   ],
   profileURL: "/admin/perfil",

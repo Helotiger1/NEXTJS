@@ -15,6 +15,11 @@ export default function useForm() {
             setShowForm(false);
         };
 
+        const [editingRow, setEditing] = useState({});
 
-  return {handleAgregar, onCancel, onSubmit, showForm}
+        const handleEdit = (row : any) => setEditing(row);
+        const handleCancelEdit = () => setEditing(false)
+
+
+  return {handleAgregar, onCancel, onSubmit, showForm, handleEdit, handleCancelEdit, editingRow}
 }

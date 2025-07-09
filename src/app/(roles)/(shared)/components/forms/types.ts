@@ -8,6 +8,7 @@ export type Field = {
 };
 
 export type DynamicFormProps = {
+  initConfig? : any
   config: Field[];
   onSubmit: (data: Record<string, any>) => void;
   onCancel?: (e: React.MouseEvent<HTMLButtonElement>) => void;

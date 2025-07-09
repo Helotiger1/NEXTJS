@@ -1,15 +1,18 @@
 "use client";
 import { RegisterForm } from "./components/RegisterForm";
 import { useRegisterForm } from "./hooks/useRegisterForm";
+import PageTransition from "../../components/PageTransition";
 
 export default function RegisterPage() {
-  const { form, handleChange, handleSubmit } = useRegisterForm();
+  const { handleChange, handleSubmit, form } = useRegisterForm();
 
   return (
-    <RegisterForm
-      form={form}
-      onChange={handleChange}
-      onSubmit={handleSubmit}
-    />
+    <PageTransition>
+      <RegisterForm
+        onChange={handleChange}
+        onSubmit={handleSubmit}
+        form={form}
+      />
+    </PageTransition>
   );
 }

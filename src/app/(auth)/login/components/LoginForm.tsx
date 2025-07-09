@@ -20,6 +20,7 @@ export const LoginForm = ({ onChange, onSubmit, form }: LoginFormProps) => {
             <FloatingInput
               name="email"
               label="Email"
+              type="email"
               value={form.email}
               onChange={onChange}
             />

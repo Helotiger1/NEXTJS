@@ -36,7 +36,7 @@ export default function ClienteDashboard() {
     >
       {/* Bienvenida */}
       <h1 className="text-4xl font-bold tracking-tight mb-2">
-        ¡Hola, <span className="text-purple-400">{nombre}</span>!
+        ¡Holaa, <span className="text-purple-400">{nombre}</span>!
       </h1>
       <p className="text-gray-300 text-lg mb-6">
         Aquí tienes un resumen de tus actividades recientes

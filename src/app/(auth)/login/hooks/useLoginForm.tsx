@@ -1,14 +1,14 @@
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export function useLoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const tipo = searchParams.get("tipo"); // "clientee" o "empleado"
 
   const [form, setForm] = useState({
-    email: "",
-    password: "",
+    email: '',
+    password: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -18,21 +18,25 @@ export function useLoginForm() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const loginCorrecto = true;
-
-    if (!loginCorrecto) {
-      alert("Datos inválidos");
+    // Validación ficticia
+    if (!form.email || !form.password) {
+      alert('Por favor completa todos los campos');
       return;
     }
 
-    if (tipo === "cliente") router.push("/cliente/inicio");
-    else if (tipo === "empleado") router.push("/empleado/inicio");
-    else router.push("/");
+    // Simular login correcto
+    const user = {
+      nombre: 'Juan Pérez',
+      rol: 'cliente',
+    };
+
+    localStorage.setItem('user', JSON.stringify(user));
+    router.push('/cliente/inicio');
   };
 
   return {
+    form,
     handleChange,
     handleSubmit,
-    form,
   };
 }

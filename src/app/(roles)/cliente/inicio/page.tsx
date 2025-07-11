@@ -1,15 +1,16 @@
-"use client";
+'use client';
 
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
 import {
   TruckIcon,
   DocumentTextIcon,
   InboxArrowDownIcon,
-} from "@heroicons/react/24/outline";
-import { useState } from "react";
-import { motion } from "framer-motion";
+} from '@heroicons/react/24/outline';
 
 export default function ClienteDashboard() {
-  const [nombre, setNombre] = useState("Juan Pérez");
+  const [nombre, setNombre] = useState('');
 
   const paquetes = {
     total: 6,
@@ -23,16 +24,30 @@ export default function ClienteDashboard() {
   };
 
   const ultimoEnvio = {
-    codigo: "ENV123456",
-    estado: "En tránsito",
+    codigo: 'ENV123456',
+    estado: 'En tránsito',
   };
+
+  useEffect(() => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const yaMostroToast = sessionStorage.getItem('bienvenida-mostrada');
+
+  if (user.nombre) {
+    setNombre(user.nombre);
+    
+    if (!yaMostroToast) {
+      toast.success(`Bienvenido, ${user.nombre}`);
+      sessionStorage.setItem('bienvenida-mostrada', 'true');
+    }
+  }
+}, []);
 
   return (
     <motion.main
       className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-white"
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
     >
       {/* Bienvenida */}
       <h1 className="text-4xl font-bold tracking-tight mb-2">

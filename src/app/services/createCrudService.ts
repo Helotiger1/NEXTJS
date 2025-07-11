@@ -12,7 +12,7 @@ export interface CrudService<TData, TResult> {
   eliminar: (id: string) => Promise<void>;
 }
 
-export function createCrudService<TData, TResult>(
+export function createCrudService<TData, TResult = TData>(
   baseUrl: string
 ): CrudService<TData, TResult> {
   return {
@@ -60,18 +60,29 @@ export function manejarError(error: unknown): never {
   }
 }
 
-function flattenDeepNoPrefix(obj: Record<string, any>): Record<string, any> {
+function flattenDeepNoPrefix(obj: any): Record<string, any> {
   const result: Record<string, any> = {};
 
-  for (const key in obj) {
-    const value = obj[key];
-
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      Object.assign(result, flattenDeepNoPrefix(value));
-    } else {
-      result[key] = value;
+  function recurse(current: any) {
+    if (Array.isArray(current)) {
+      for (const item of current) {
+        recurse(item);
+      }
+    } else if (current && typeof current === "object") {
+      for (const key in current) {
+        const value = current[key];
+        if (
+          value &&
+          (typeof value === "object" || Array.isArray(value))
+        ) {
+          recurse(value);
+        } else {
+          result[key] = value;
+        }
+      }
     }
   }
 
+  recurse(obj);
   return result;
 }

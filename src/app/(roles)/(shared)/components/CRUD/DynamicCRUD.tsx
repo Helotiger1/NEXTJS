@@ -8,9 +8,9 @@ import DynamicTable from "../tables/DynamicTable";
 import { GenericButton } from "../buttons/GenericButton";
 import { Field } from "../forms/types";
 
-interface DynamicCRUDProps<TData, TResult extends Object> {
+interface DynamicCRUDProps<TData extends Object, TResult extends Object> {
     service: CrudService<TData, TResult>;
-    key: keyof TResult;
+    id: keyof TResult;
     initState: TResult;
     formConfig: Field[];
     getColumns: (
@@ -19,9 +19,9 @@ interface DynamicCRUDProps<TData, TResult extends Object> {
     ) => any;
 }
 
-export default function DynamicCRUD<TData, TResult extends Object>({
+export default function DynamicCRUD<TData extends Object, TResult extends Object = TData >({
     service,
-    key,
+    id,
     initState,
     formConfig,
     getColumns,
@@ -35,12 +35,13 @@ export default function DynamicCRUD<TData, TResult extends Object>({
         handleCancel,
         handleDelete,
         handleSubmit,
-    } = useCRUD<TData, TResult>(service, key, initState, updater);
+    } = useCRUD<TData, TResult>(service, id, initState, updater);
 
     const columns = getColumns(handleDelete, handleEdit);
 
     if (loading) return <p>Cargando...</p>;
     if (error) return <p>Error al cargar</p>;
+    console.log(data)
     if (form == null) {
         return (
             <>

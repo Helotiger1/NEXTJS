@@ -6,7 +6,7 @@ import { almacenPlano, almacen } from "@/app/services/almacenService";
 export const Almacenes = () => {
     return (
         <DynamicCRUD<almacen, almacenPlano>
-            key={"codigo"}
+            id={"codigo"}
             formConfig={formConfig}
             getColumns={getColumns}
             initState={initState}

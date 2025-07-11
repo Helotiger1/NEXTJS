@@ -104,18 +104,13 @@ export async function GET(req: Request) {
       },
     });
 
-    const total = await prisma.usuario.count({ where });
+    // Opcional: total, si lo necesitas para paginación
+    // const total = await prisma.usuario.count({ where });
 
-    return NextResponse.json({
-      page,
-      limit,
-      total,
-      data: usuarios,
-    });
+    return NextResponse.json(usuarios);
 
   } catch (error) {
     console.error('Error al obtener usuarios:', error);
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
-

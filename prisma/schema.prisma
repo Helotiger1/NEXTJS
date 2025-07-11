@@ -14,7 +14,8 @@ enum Rol {
 }
 
 model Usuario {
-  cedula     String       @id
+  id Int @id @default(autoincrement())
+  cedula     String       @unique
   nombre     String
   apellido   String
   email      String       @unique

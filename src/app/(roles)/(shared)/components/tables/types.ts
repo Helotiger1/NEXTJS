@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+
 export type Column<T> = {
   key: keyof T | string;
   label: string;
@@ -5,6 +7,7 @@ export type Column<T> = {
 };
 
 export type DynamicTableProps<T> = {
+  children?: ReactNode
   columns: Column<T>[];
   data: T[];
   rowsPerPage?: number;

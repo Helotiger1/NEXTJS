@@ -1,9 +1,9 @@
 import DynamicForm from "@/app/(roles)/(shared)/components/forms/DynamicForm";
-import { packageFormConfig } from "../config";
+import { packageFormConfig,data, columns } from "../config";
 import { CedulaFilter } from "@/app/(roles)/(shared)/components/filters/CedulaFilter";
 import DynamicTable from "@/app/(roles)/(shared)/components/tables/DynamicTable";
 import { GenericButton } from "@/app/(roles)/(shared)/components/buttons/GenericButton";
-import { data,columns } from "../config";
+
 import useBills from "../useBills";
 import useForm from "@/app/(roles)/(shared)/hooks/useForm";
 

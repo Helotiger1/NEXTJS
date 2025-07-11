@@ -14,42 +14,74 @@ export const initState = {
 };
 
 export const formConfig: Field[] = [
-    {
-        name: "linea1",
-        label: "Linea 1",
-        type: "text",
-    },
-    {
-        name: "linea2",
-        label: "Linea 2",
-        type: "text",
-    },
-    {
-        name: "pais",
-        label: "Pais",
-        type: "text",
-    },
-    {
-        name: "estado",
-        label: "Estado",
-        type: "text",
-    },
-    {
-        name: "ciudad",
-        label: "Ciudad",
-        type: "text",
-    },
-    {
-        name: "codigoPostal",
-        label: "Codigo Postal",
-        type: "text",
-    },
-    {
-        name: "telefono",
-        label: "Telefono",
-        type: "text",
-    },
+  {
+    name: "cedulaOrigen",
+    label: "Cedula del cliente origen",
+    type: "text",
+  },
+  {
+    name: "cedulaDestino",
+    label: "Cedula Destinatario",
+    type: "text",
+  },
+  {
+    name: "largo",
+    label: "Largo",
+    type: "text",
+  },
+  {
+    name: "ancho",
+    label: "Ancho",
+    type: "text",
+  },
+  {
+    name: "alto",
+    label: "Alto",
+    type: "text",
+  },
+  {
+    name: "peso",
+    label: "Peso en Libras",
+    type: "text",
+  },
+  {
+    name: "pieCubico",
+    label: "Pie cubicos",
+    type: "text",
+  },
+  {
+    name: "tipoEnvio",
+    label: "Tipo de Envio",
+    type: "select",
+    options: [
+      { value: "Barco", label: "Barco" },
+      { value: "Avion", label: "Avion" },
+    ],
+  },
+  {
+    name: "origen",
+    label: "Lugar origen",
+    type: "select",
+    options: [
+      { value: "Doral", label: "Doral" },
+      { value: "California", label: "California" },
+      { value: "La Guaira", label: "La Guaira" },
+      { value: "Nueva Esparta", label: "Nueva Esparta" },
+    ],
+  },
+  {
+    name: "destino",
+    label: "Lugar destino",
+    type: "select",
+    options: [
+      { value: "Doral", label: "Doral" },
+      { value: "California", label: "California" },
+      { value: "La Guaira", label: "La Guaira" },
+      { value: "Nueva Esparta", label: "Nueva Esparta" },
+    ],
+  },
 ];
+
 
 export const getColumns: any = (
     handleDelete: (id : string) => void,
@@ -65,7 +97,7 @@ export const getColumns: any = (
     { key: "codigoPostal", label: "Código Postal" },
     {
         key: "Editar",
-        label: "Ver paquetes",
+        label: "Editar",
         render: (_: any, row: any) => (
             <button
                 onClick={()=> { handleEdit(row)}}
@@ -76,10 +108,10 @@ export const getColumns: any = (
     },
     {
         key: "Eliminar",
-        label: "Ver paquetes",
+        label: "Eliminar",
         render: (_: any, row: any) => (
             <button
-                onClick={() => handleDelete(row.id)}
+                onClick={() => handleDelete(row.codigo)}
                 className="text-blue-600 underline">
                 Eliminar
             </button>

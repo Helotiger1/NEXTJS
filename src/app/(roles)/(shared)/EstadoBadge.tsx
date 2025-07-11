@@ -5,6 +5,8 @@ export function EstadoBadge(estado: string) {
     EN_ALMACEN: 'bg-indigo-100 text-indigo-700',
     ENTREGADO: 'bg-green-100 text-green-700',
     CANCELADO: 'bg-red-100 text-red-700',
+    PAGADA: 'bg-green-100 text-green-700',
+    PENDIENTE: 'bg-yellow-100 text-yellow-700',
   };
 
   const estilo = estilos[estado] ?? 'bg-gray-100 text-gray-700';

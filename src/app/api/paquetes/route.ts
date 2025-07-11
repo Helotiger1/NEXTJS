@@ -202,16 +202,7 @@ export async function GET(req: NextRequest) {
       }),
     ]);
 
-    return NextResponse.json({
-      success: true,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-      data: paquetes,
-    });
+    return NextResponse.json(paquetes);
   } catch (error) {
     console.error("Error GET /api/paquetes:", error);
     return NextResponse.json(

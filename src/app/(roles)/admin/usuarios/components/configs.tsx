@@ -54,7 +54,7 @@ export const initState: Usuario= {
   telefono: "",
   email: "",
   contraseña: "",
-  rol: "ADMIN" // porque es la primera opción en el select
+  rol: "ADMIN" 
 }
 
 

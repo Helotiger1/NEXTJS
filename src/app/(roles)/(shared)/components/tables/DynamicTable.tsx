@@ -61,7 +61,7 @@ export default function DynamicTable<T extends object>({
           <button
             onClick={() => setPage((p) => Math.max(p - 1, 0))}
             disabled={page === 0}
-            className="px-3 py-1 text-sm rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+            className="px-3 py-1 text-sm rounded-md bg-purple-900 hover:bg-gray-300 disabled:opacity-50"
           >
             ◀ Anterior
           </button>
@@ -72,8 +72,8 @@ export default function DynamicTable<T extends object>({
               onClick={() => setPage(i)}
               className={`px-3 py-1 text-sm rounded-md transition-all ${
                 page === i
-                  ? 'bg-purple-700 text-white'
-                  : 'bg-gray-100 hover:bg-gray-200'
+                  ? 'bg-gray-400 text-white'
+                  : 'bg-purple-600 hover:bg-gray-200'
               }`}
             >
               {i + 1}
@@ -83,7 +83,7 @@ export default function DynamicTable<T extends object>({
           <button
             onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
             disabled={page >= totalPages - 1}
-            className="px-3 py-1 text-sm rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+            className="px-3 py-1 text-sm rounded-md bg-purple-900 hover:bg-gray-300 disabled:opacity-50"
           >
             Siguiente ▶
           </button>

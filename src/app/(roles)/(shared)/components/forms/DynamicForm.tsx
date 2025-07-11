@@ -1,11 +1,11 @@
 import { FormEvent } from "react";
 import { DynamicFormProps } from "./types";
 
-export default function DynamicForm({ config, onSubmit, onCancel, initConfig = {} }: DynamicFormProps) {
+export default function DynamicForm<TData>({ config, onSubmit, onCancel, initConfig = {} }: DynamicFormProps<TData> ) {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const data = Object.fromEntries(formData);
+    const data = Object.fromEntries(formData) as TData;
     onSubmit(data);
   };
 

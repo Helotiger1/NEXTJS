@@ -1,5 +1,6 @@
+"use client"
 import { createCrudService } from "./createCrudService";
-export interface Almacen {
+export interface almacen {
     codigo: string;
     telefono: string;
     direccion: {
@@ -12,8 +13,18 @@ export interface Almacen {
     };
 }
 
-export type AlmacenPayload = Omit<Almacen, "id">; // o Partial<Almacen> si todo es opcional
+export interface almacenPlano {
+    codigo?: string;
+    telefono: string;
+    linea1: String;
+    linea2: String;
+    pais: String;
+    estado: String;
+    ciudad: String;
+    codigoPostal: string;
+}
 
-export const almacenService = createCrudService<Almacen, AlmacenPayload>(
+
+export const almacenService = createCrudService<almacen, almacenPlano>(
     "/almacenes"
 );

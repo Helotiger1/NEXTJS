@@ -52,7 +52,7 @@ export async function PUT(
   try {
     const codigo = Number(params.codigo);
     const body = await request.json();
-    console.log(body)
+    console.log("Si llego ", body, codigo)
 
     const almacen = await prisma.almacen.findUnique({
       where: { codigo },
@@ -137,7 +137,7 @@ export async function DELETE(
 ) {
     try {
 const codigo = Number(params.codigo);
-
+      console.log("el registro dice 10 pero, aqui dice:",codigo)
         const almacen = await prisma.almacen.findUnique({ where: { codigo } });
         if (!almacen) {
             return NextResponse.json(

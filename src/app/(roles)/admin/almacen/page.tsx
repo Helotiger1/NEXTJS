@@ -1,11 +1,11 @@
 import React from 'react'
-import { Almacen} from './components/Almacen'
+import { Almacenes} from './components/Almacenes'
 
 export default function page() {
   return (
     <>
     <h1 className='text-center text-2xl font-bold py-4'>Registrar un almacen</h1>
-    <Almacen></Almacen>
+    <Almacenes></Almacenes>
     </>
   )
 }

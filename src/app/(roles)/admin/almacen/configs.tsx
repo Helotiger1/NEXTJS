@@ -1,6 +1,17 @@
+"use client"
 import { Field } from "@/app/(roles)/(shared)/components/forms/types";
-import { Almacen, almacenService } from "@/app/services/almacenService";
-import DynamicForm from "../../(shared)/components/forms/DynamicForm";
+
+
+
+export const initState = {
+  linea1: "",
+  linea2: "",
+  pais: "",
+  estado: "",
+  ciudad: "",
+  codigoPostal: "",
+  telefono: "",
+};
 
 export const formConfig: Field[] = [
     {
@@ -40,8 +51,8 @@ export const formConfig: Field[] = [
     },
 ];
 
-export const getColumns = (
-    updater: () => void,
+export const getColumns: any = (
+    handleDelete: (id : string) => void,
     handleEdit: (row : any) => void
 ) => [
     { key: "codigo", label: "Código" },
@@ -57,7 +68,7 @@ export const getColumns = (
         label: "Ver paquetes",
         render: (_: any, row: any) => (
             <button
-                onClick={() => {handleEdit(row)}}
+                onClick={()=> { handleEdit(row)}}
                 className="text-blue-600 underline">
                 Editar
             </button>
@@ -68,46 +79,10 @@ export const getColumns = (
         label: "Ver paquetes",
         render: (_: any, row: any) => (
             <button
-                onClick={async () => {
-                    await almacenService.eliminar(row.codigo);
-                    updater();
-                }}
+                onClick={() => handleDelete(row.id)}
                 className="text-blue-600 underline">
                 Eliminar
             </button>
         ),
-    },
-];
-
-export const data = [
-    {
-        codigo: "A001",
-        telefono: "0414-1234567",
-        linea1: "Av. Principal, Edif. Central",
-        linea2: "Piso 2, Oficina 4B",
-        pais: "Venezuela",
-        estado: "Distrito Capital",
-        ciudad: "Caracas",
-        codigoPostal: "1010",
-    },
-    {
-        codigo: "A002",
-        telefono: "0426-7654321",
-        linea1: "Calle 8, Residencias Sol",
-        linea2: "Apto 12-C",
-        pais: "Venezuela",
-        estado: "Zulia",
-        ciudad: "Maracaibo",
-        codigoPostal: "4001",
-    },
-    {
-        codigo: "A003",
-        telefono: "0412-9876543",
-        linea1: "Carrera 5, Quinta Las Palmas",
-        linea2: "Sector La Floresta",
-        pais: "Venezuela",
-        estado: "Carabobo",
-        ciudad: "Valencia",
-        codigoPostal: "2001",
     },
 ];

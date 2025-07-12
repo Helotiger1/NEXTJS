@@ -75,13 +75,13 @@ enum EstadoPaquete {
 model Paquete {
   tracking        Int      @id @default(autoincrement())
   descripcion     String
-  estado          EstadoPaquete
+  estado          EstadoPaquete @default(REGISTRADO)
   almacenCodigo   Int
   empleadoCedula  String
   medidasId       Int      @unique
   origenId        Int
   destinoId       Int
-
+  tipoEnvio       String
   medidas         Medidas  @relation(fields: [medidasId], references: [id])
   almacen         Almacen  @relation(fields: [almacenCodigo], references: [codigo])
   empleado        Usuario  @relation("PaquetesRegistrados", fields: [empleadoCedula], references: [cedula])
@@ -106,10 +106,10 @@ model Medidas {
 
 model Envio {
   numero        Int       @id @default(autoincrement())
-  tipo          String
-  estado        String
-  fechaSalida   DateTime
-  fechaLlegada  DateTime
+  tipoEnvio          String
+  estado        String   @default("EN TRANSITO")
+  fechaSalida   DateTime @default(now())
+  fechaLlegada  DateTime? 
 
   almacenOrigen Int       @unique
   almacenEnvio  Int       @unique
@@ -118,7 +118,6 @@ model Envio {
   Envio         Almacen   @relation("Destino", fields: [almacenEnvio], references: [codigo])
 
   detalleEnvio  DetalleEnvio[]
-  facturas      Factura[]
 }
 
 model DetalleEnvio {
@@ -132,14 +131,14 @@ model DetalleEnvio {
 
 model Factura {
   numero         Int       @id @default(autoincrement())
-  estado         String
+  estado         String    @default("Pendiente")
   monto          Float
-  metodoPago     String
+  metodoPago     String    @default("Desconocido")
   cantPiezas     Int
-  envioNumero    Int       @unique
+  envioNumero    Int       @unique //esto no va
   clienteCedula  String
 
-  envioNum       Envio     @relation(fields: [envioNumero], references: [numero])
+
   cliente        Usuario   @relation("FacturasCliente", fields: [clienteCedula], references: [cedula])
 
   detalleFactura DetalleFactura[]

@@ -14,72 +14,41 @@ export const initState = {
 };
 
 export const formConfig: Field[] = [
-  {
-    name: "cedulaOrigen",
-    label: "Cedula del cliente origen",
-    type: "text",
-  },
-  {
-    name: "cedulaDestino",
-    label: "Cedula Destinatario",
-    type: "text",
-  },
-  {
-    name: "largo",
-    label: "Largo",
-    type: "text",
-  },
-  {
-    name: "ancho",
-    label: "Ancho",
-    type: "text",
-  },
-  {
-    name: "alto",
-    label: "Alto",
-    type: "text",
-  },
-  {
-    name: "peso",
-    label: "Peso en Libras",
-    type: "text",
-  },
-  {
-    name: "pieCubico",
-    label: "Pie cubicos",
-    type: "text",
-  },
-  {
-    name: "tipoEnvio",
-    label: "Tipo de Envio",
-    type: "select",
-    options: [
-      { value: "Barco", label: "Barco" },
-      { value: "Avion", label: "Avion" },
-    ],
-  },
-  {
-    name: "origen",
-    label: "Lugar origen",
-    type: "select",
-    options: [
-      { value: "Doral", label: "Doral" },
-      { value: "California", label: "California" },
-      { value: "La Guaira", label: "La Guaira" },
-      { value: "Nueva Esparta", label: "Nueva Esparta" },
-    ],
-  },
-  {
-    name: "destino",
-    label: "Lugar destino",
-    type: "select",
-    options: [
-      { value: "Doral", label: "Doral" },
-      { value: "California", label: "California" },
-      { value: "La Guaira", label: "La Guaira" },
-      { value: "Nueva Esparta", label: "Nueva Esparta" },
-    ],
-  },
+    {
+        name: "linea1",
+        label: "Linea 1",
+        type: "text",
+    },
+    {
+        name: "linea2",
+        label: "Linea 2",
+        type: "text",
+    },
+    {
+        name: "pais",
+        label: "Pais",
+        type: "text",
+    },
+    {
+        name: "estado",
+        label: "Estado",
+        type: "text",
+    },
+    {
+        name: "ciudad",
+        label: "Ciudad",
+        type: "text",
+    },
+    {
+        name: "codigoPostal",
+        label: "Codigo Postal",
+        type: "text",
+    },
+    {
+        name: "telefono",
+        label: "Telefono",
+        type: "text",
+    },
 ];
 
 

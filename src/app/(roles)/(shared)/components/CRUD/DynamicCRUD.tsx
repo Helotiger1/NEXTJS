@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React from "react";
 import useCRUD from "../../hooks/useForm";
 import { useCRUDForm } from "../../hooks/useCRUDForm";
@@ -13,18 +13,25 @@ interface DynamicCRUDProps<TData extends Object, TResult extends Object> {
     id: keyof TResult;
     initState: TResult;
     formConfig: Field[];
-    getColumns: (
-        handleDelete: (id: string) => void,
-        handleEdit: (data : TResult) => void
-    ) => any;
+    getColumns:
+        | ((
+              handleDelete: (id: string) => void,
+              handleEdit: (data: TResult) => void
+          ) => any)
+        | ((handleCheck: (row : any) => void) => any);
+    checks?: boolean;
 }
 
-export default function DynamicCRUD<TData extends Object, TResult extends Object = TData >({
+export default function DynamicCRUD<
+    TData extends Object,
+    TResult extends Object = TData
+>({
     service,
     id,
     initState,
     formConfig,
     getColumns,
+    checks = false,
 }: DynamicCRUDProps<TData, TResult>) {
     const { data, loading, error, updater } = useCRUDForm(service);
 
@@ -34,14 +41,20 @@ export default function DynamicCRUD<TData extends Object, TResult extends Object
         handleEdit,
         handleCancel,
         handleDelete,
-        handleSubmit,
+        handleSubmit,handleCheck
     } = useCRUD<TData, TResult>(service, id, initState, updater);
 
-    const columns = getColumns(handleDelete, handleEdit);
+
+      const columns = checks
+        ? (getColumns as (handleCheck: (row: TResult) => void) => any)(handleCheck)
+        : (getColumns as (
+              handleDelete: (id: string) => void,
+              handleEdit: (row: TResult) => void
+          ) => any)(handleDelete, handleEdit);
 
     if (loading) return <p>Cargando...</p>;
     if (error) return <p>Error al cargar</p>;
-    console.log(data)
+    
     if (form == null) {
         return (
             <>
@@ -49,16 +62,13 @@ export default function DynamicCRUD<TData extends Object, TResult extends Object
                     handleAction={handleAgregar}
                     content="Agregar"
                     type="button"></GenericButton>
-                <DynamicTable
-                    columns={columns}
-                    data={data}
-                    rowsPerPage={2}></DynamicTable>
+                <DynamicTable columns={columns} data={data}></DynamicTable>
             </>
         );
     }
 
     if (form) {
-const initialConfig = form ?? initState;
+        const initialConfig = form ?? initState;
         return (
             <DynamicForm
                 initConfig={initialConfig}

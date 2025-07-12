@@ -40,7 +40,26 @@ export default function useCRUD<TData, TResult>(
     updater();
   };
 
+const [array, setArray] = useState<TData[]>([]);
+
+const handleCheck = (row: TData, checked: boolean) => {
+  setArray((prev) => {
+    const exists = prev.some((item) => item[id] === row[id]);
+
+    if (checked && !exists) {
+      return [...prev, row];
+    }
+
+    if (!checked && exists) {
+      return prev.filter((item) => item[id] !== row[id]);
+    }
+
+    return prev;
+  });
+};
+
   return {
+    handleCheck,
     form,
     handleAgregar,
     handleEdit,

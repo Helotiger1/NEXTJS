@@ -1,7 +1,8 @@
 import { Field } from "../../(shared)/components/forms/types";
+import { getAlmacenes } from "../facturas/configs";
 export const formConfig: Field[] = [
     {
-        name: "1",
+        name: "tipoEnvio",
         label: "Tipo de Envio",
         type: "select",
         options: [
@@ -10,26 +11,16 @@ export const formConfig: Field[] = [
         ],
     },
     {
-        name: "2",
+        name: "almacenOrigen",
         label: "Lugar origen",
         type: "select",
-        options: [
-            { value: "Doral", label: "Doral" },
-            { value: "Cliente", label: "California" },
-            { value: "Empleado", label: "La Guaira" },
-            { value: "Doral", label: "Nueva Esparta" },
-        ],
+        options: getAlmacenes
     },
     {
-        name: "6",
+        name: "almacenEnvio",
         label: "Lugar destino",
         type: "select",
-        options: [
-            { value: "Doral", label: "Doral" },
-            { value: "Cliente", label: "California" },
-            { value: "Empleado", label: "La Guaira" },
-            { value: "Doral", label: "Nueva Esparta" },
-        ],
+        options: getAlmacenes
     },
 ];
 

@@ -1,10 +1,8 @@
-"use client"
-import { RegisterPackageForm } from "./components/RegisterPackageForm"
+import React from 'react'
+import { Facturas } from './components/Facturas'
+
 export default function page() {
   return (
-    <>
-    <RegisterPackageForm></RegisterPackageForm>
-</>
-
+    <Facturas></Facturas>
   )
 }

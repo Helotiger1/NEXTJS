@@ -43,6 +43,7 @@ export async function PUT(
   { params }: { params: Promise<{ cedula: string }> }
 ) {
   const { cedula } = await params;
+  console.log(params)
 
   if (!cedula || !validarCedula(cedula)) {
     return NextResponse.json({ error: 'Cédula inválida' }, { status: 400 });
@@ -74,6 +75,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ cedula: string }> }
 ) {
+  console.log(params);
   const { cedula } = await params;
 
   if (!cedula || !validarCedula(cedula)) {

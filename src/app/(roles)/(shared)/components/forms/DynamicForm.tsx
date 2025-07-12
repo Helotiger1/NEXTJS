@@ -1,7 +1,13 @@
-import { FormEvent } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { DynamicFormProps } from "./types";
+import type { Field, Option } from "./types"; // Asegúrate de importar bien tus tipos
 
-export default function DynamicForm<TData>({ config, onSubmit, onCancel, initConfig = {} }: DynamicFormProps<TData> ) {
+export default function DynamicForm<TData>({
+  config,
+  onSubmit,
+  onCancel,
+  initConfig = {},
+}: DynamicFormProps<TData>) {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -10,9 +16,30 @@ export default function DynamicForm<TData>({ config, onSubmit, onCancel, initCon
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-6 rounded-xl shadow-md border max-w-md mx-auto">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4 p-6 rounded-xl shadow-md border max-w-md mx-auto"
+    >
       {config.map((field) => {
         const value = initConfig[field.name];
+
+        const [resolvedOptions, setResolvedOptions] = useState<Option[]>([]);
+
+        useEffect(() => {
+          if (field.type === "select" && field.options) {
+            const result =
+              typeof field.options === "function"
+                ? field.options(initConfig)
+                : field.options;
+
+            if (result instanceof Promise) {
+              result.then(setResolvedOptions);
+            } else {
+              setResolvedOptions(result);
+            }
+          }
+        }, [field.options]);
+
         return (
           <div key={field.name} className="flex flex-col">
             {field.type !== "checkbox" && (
@@ -22,19 +49,25 @@ export default function DynamicForm<TData>({ config, onSubmit, onCancel, initCon
             )}
 
             {field.type === "select" ? (
-              <select
-                id={field.name}
-                name={field.name}
-                defaultValue={value !== undefined && value !== null ? value : ""}
-                className="bg-black border rounded-md px-3 py-2"
-              >
-                {field.options?.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            ) : field.type === "checkbox" ? (
+  resolvedOptions.length === 0 ? (
+    <span className="text-sm italic text-gray-500">Cargando...</span>
+  ) : (
+    <select
+      id={field.name}
+      name={field.name}
+      defaultValue={
+        value !== undefined && value !== null ? value : ""
+      }
+      className="bg-black border rounded-md px-3 py-2"
+    >
+      {resolvedOptions.map((opt) => (
+        <option key={opt.value} value={opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  )
+) : field.type === "checkbox" ? (
               <label className="inline-flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -49,7 +82,9 @@ export default function DynamicForm<TData>({ config, onSubmit, onCancel, initCon
                 type={field.type}
                 name={field.name}
                 id={field.name}
-                defaultValue={value !== undefined && value !== null ? value : ""}
+                defaultValue={
+                  value !== undefined && value !== null ? value : ""
+                }
                 className="border rounded-md px-3 py-2"
               />
             )}
@@ -57,12 +92,19 @@ export default function DynamicForm<TData>({ config, onSubmit, onCancel, initCon
         );
       })}
 
-      <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-md">
+      <button
+        type="submit"
+        className="bg-blue-600 text-white px-4 py-2 rounded-md"
+      >
         Enviar
       </button>
 
       {onCancel && (
-        <button type="button" onClick={onCancel} className="bg-blue-600 text-white px-4 py-2 rounded-md">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="bg-blue-600 text-white px-4 py-2 rounded-md"
+        >
           Cancelar
         </button>
       )}

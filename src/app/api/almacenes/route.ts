@@ -5,17 +5,31 @@ import {
   validarAlmacenUnico,
 } from "@lib/Validaciones_Almacenes";
 
-// POST - Crear nuevo almacén
+// POST - Crear nuevo almacén con datos planos
 export async function POST(req: NextRequest) {
   try {
+    // Recibir datos planos del cuerpo de la solicitud
     const requestData = await req.json();
 
-    // Convertir código postal a número si es necesario
-    if (requestData.direccion?.codigoPostal) {
-      requestData.direccion.codigoPostal = parseInt(
-        requestData.direccion.codigoPostal
+    // Desempaquetar datos planos a estructura esperada
+    const datosTransformados = {
+      telefono: requestData.telefono,
+      direccion: {
+        linea1: requestData.linea1,
+        linea2: requestData.linea2 || "", // Opcional
+        pais: requestData.pais,
+        estado: requestData.estado,
+        ciudad: requestData.ciudad,
+        codigoPostal: requestData.codigoPostal,
+      },
+    };
+
+    // Convertir código postal a número
+    if (datosTransformados.direccion.codigoPostal) {
+      datosTransformados.direccion.codigoPostal = parseInt(
+        datosTransformados.direccion.codigoPostal
       );
-      if (isNaN(requestData.direccion.codigoPostal)) {
+      if (isNaN(datosTransformados.direccion.codigoPostal)) {
         return NextResponse.json(
           {
             success: false,
@@ -27,8 +41,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 1. Validación básica de campos requeridos
-    const erroresValidacion = validarAlmacenCompleto(requestData);
+    // Validación de campos requeridos
+    const erroresValidacion = validarAlmacenCompleto(datosTransformados);
     if (erroresValidacion.length > 0) {
       return NextResponse.json(
         {
@@ -40,10 +54,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { telefono, direccion } = requestData;
-
-    // 2. Validar unicidad (almacén no duplicado)
-    const erroresUnicidad = await validarAlmacenUnico({ telefono, direccion });
+    // Validar unicidad
+    const erroresUnicidad = await validarAlmacenUnico(datosTransformados);
     if (erroresUnicidad.length > 0) {
       return NextResponse.json(
         {
@@ -55,22 +67,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Crear en transacción
+    // Crear en transacción
     const almacen = await prisma.$transaction(async (tx) => {
       const nuevaDireccion = await tx.direccion.create({
         data: {
-          linea1: direccion.linea1!,
-          linea2: direccion.linea2 || "",
-          pais: direccion.pais!,
-          estado: direccion.estado!,
-          ciudad: direccion.ciudad!,
-          codigoPostal: direccion.codigoPostal,
+          linea1: datosTransformados.direccion.linea1,
+          linea2: datosTransformados.direccion.linea2,
+          pais: datosTransformados.direccion.pais,
+          estado: datosTransformados.direccion.estado,
+          ciudad: datosTransformados.direccion.ciudad,
+          codigoPostal: datosTransformados.direccion.codigoPostal,
         },
       });
 
       return await tx.almacen.create({
         data: {
-          telefono: telefono.toString(),
+          telefono: datosTransformados.telefono.toString(),
           direccionId: nuevaDireccion.id,
         },
         include: { direccion: true },

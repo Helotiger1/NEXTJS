@@ -12,24 +12,49 @@ import { Prisma } from "@prisma/client";
 // POST: Crear nuevo paquete
 export async function POST(req: NextRequest) {
   try {
-
     const body = await req.json();
     console.log("Datos recibidos:", body);
 
-    // Procesamiento inicial de datos
-    const processedData = { ...body };
+    // Desempaquetar datos planos
+    const {
+      descripcion,
+      estado = "REGISTRADO",
+      almacenCodigo,
+      empleadoId,
+      origenId,
+      destinoId,
+      clienteOrigenId,
+      clienteDestinoId,
+      largo,
+      ancho,
+      alto,
+      peso,
+    } = body;
 
-    // Convertir medidas
-    if (processedData.medidas) {
-      processedData.medidas = {
-        largo: Number(processedData.medidas.largo),
-        ancho: Number(processedData.medidas.ancho),
-        alto: Number(processedData.medidas.alto),
-        peso: Number(processedData.medidas.peso),
-      };
+    // Convertir medidas a número
+    const medidas = {
+      largo: Number(largo),
+      ancho: Number(ancho),
+      alto: Number(alto),
+      peso: Number(peso),
+    };
+
+    // Validar que sean números válidos
+    if (
+      [medidas.largo, medidas.ancho, medidas.alto, medidas.peso].some((v) =>
+        isNaN(v)
+      )
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Todas las medidas (largo, ancho, alto, peso) deben ser numéricas",
+        },
+        { status: 400 }
+      );
     }
 
-    // Convertir otros campos numéricos
+    // Validar campos numéricos requeridos
     const numericFields = [
       "almacenCodigo",
       "empleadoId",
@@ -39,60 +64,54 @@ export async function POST(req: NextRequest) {
       "clienteDestinoId",
     ];
 
+    const processedData = {
+      descripcion,
+      estado,
+      almacenCodigo: Number(almacenCodigo),
+      empleadoId: Number(empleadoId),
+      origenId: Number(origenId),
+      destinoId: Number(destinoId),
+      clienteOrigenId: Number(clienteOrigenId),
+      clienteDestinoId: Number(clienteDestinoId),
+    };
+
     numericFields.forEach((field) => {
-      if (processedData[field] !== undefined) {
-        const num = Number(processedData[field]);
-        if (isNaN(num)) {
-          throw new Error(`${field} debe ser un número válido`);
-        }
-        processedData[field] = num;
-      } else {
-        throw new Error(`${field} es requerido`);
+      const value = processedData[field as keyof typeof processedData];
+      if (value === undefined || isNaN(value)) {
+        throw new Error(`${field} debe ser un número válido`);
       }
     });
 
     const {
-      descripcion,
-      estado = "REGISTRADO",
-      almacenCodigo,
-      empleadoId,
-      medidas,
-      origenId,
-      destinoId,
-      clienteOrigenId,
-      clienteDestinoId,
+      descripcion: desc,
+      estado: estadoFinal,
+      almacenCodigo: almacenCod,
+      empleadoId: empId,
+      origenId: origId,
+      destinoId: destId,
+      clienteOrigenId: cliOrigId,
+      clienteDestinoId: cliDestId,
     } = processedData;
 
     // Validaciones básicas
     const errors: Record<string, string> = {};
 
-    // Validar descripción
-    const descError = validarTextoNoVacio(descripcion, "Descripción", {
+    const descError = validarTextoNoVacio(desc, "Descripción", {
       maxLength: 500,
     });
     if (descError) errors.descripcion = descError;
 
-    // Validar estado
-    if (estado && !validarEstadoPaqueteString(estado)) {
+    if (estadoFinal && !validarEstadoPaqueteString(estadoFinal)) {
       errors.estado = "Estado de paquete inválido";
     }
 
-    // Validar campos numéricos
     const numericValidations = [
-      { field: "almacenCodigo", value: almacenCodigo, name: "Almacén" },
-      { field: "empleadoId", value: empleadoId, name: "Empleado" },
-      { field: "origenId", value: origenId, name: "Origen" },
-      { field: "destinoId", value: destinoId, name: "Destino" },
-      {
-        field: "clienteOrigenId",
-        value: clienteOrigenId,
-        name: "Cliente Origen",
-      },
-      {
-        field: "clienteDestinoId",
-        value: clienteDestinoId,
-        name: "Cliente Destino",
-      },
+      { field: "almacenCodigo", value: almacenCod, name: "Almacén" },
+      { field: "empleadoId", value: empId, name: "Empleado" },
+      { field: "origenId", value: origId, name: "Origen" },
+      { field: "destinoId", value: destId, name: "Destino" },
+      { field: "clienteOrigenId", value: cliOrigId, name: "Cliente Origen" },
+      { field: "clienteDestinoId", value: cliDestId, name: "Cliente Destino" },
     ];
 
     numericValidations.forEach(({ field, value, name }) => {
@@ -100,7 +119,6 @@ export async function POST(req: NextRequest) {
       if (error) errors[field] = error;
     });
 
-    // Validar medidas
     const medidasError = validarMedidas(medidas);
     if (medidasError) {
       errors.medidas = medidasError;
@@ -112,7 +130,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Validaciones de negocio
-    if (origenId === destinoId) {
+    if (origId === destId) {
       return NextResponse.json(
         {
           success: false,
@@ -122,7 +140,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (clienteOrigenId === clienteDestinoId) {
+    if (cliOrigId === cliDestId) {
       return NextResponse.json(
         {
           success: false,
@@ -132,7 +150,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (estado && estado !== "REGISTRADO") {
+    if (estadoFinal && estadoFinal !== "REGISTRADO") {
       return NextResponse.json(
         { success: false, error: "El estado inicial debe ser REGISTRADO" },
         { status: 400 }
@@ -142,24 +160,23 @@ export async function POST(req: NextRequest) {
     // Verificar existencia de entidades relacionadas
     const [almacen, empleado, origen, destino, clienteOrigen, clienteDestino] =
       await Promise.all([
-        prisma.almacen.findUnique({ where: { codigo: almacenCodigo } }),
+        prisma.almacen.findUnique({ where: { codigo: almacenCod } }),
         prisma.usuario.findUnique({
-          where: { id: empleadoId },
+          where: { id: empId },
           include: { roles: true },
         }),
-        prisma.almacen.findUnique({ where: { codigo: origenId } }),
-        prisma.almacen.findUnique({ where: { codigo: destinoId } }),
+        prisma.almacen.findUnique({ where: { codigo: origId } }),
+        prisma.almacen.findUnique({ where: { codigo: destId } }),
         prisma.usuario.findUnique({
-          where: { id: clienteOrigenId },
+          where: { id: cliOrigId },
           include: { roles: true },
         }),
         prisma.usuario.findUnique({
-          where: { id: clienteDestinoId },
+          where: { id: cliDestId },
           include: { roles: true },
         }),
       ]);
 
-    // Validar referencias
     if (!almacen) errors.almacenCodigo = "Almacén no encontrado";
     if (!empleado) errors.empleadoId = "Empleado no encontrado";
     if (!origen) errors.origenId = "Almacén origen no encontrado";
@@ -172,7 +189,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, errors }, { status: 404 });
     }
 
-    // Verificar roles
     const empleadoTienePermiso = empleado!.roles.some((r) =>
       ["EMPLEADO", "ADMIN"].includes(r.rol.toUpperCase())
     );
@@ -203,28 +219,26 @@ export async function POST(req: NextRequest) {
 
     // Crear paquete en transacción
     const nuevoPaquete = await prisma.$transaction(async (tx) => {
-      // 1. Crear las medidas
       const medidasCreadas = await tx.medidas.create({
         data: {
           largo: medidas.largo,
           ancho: medidas.ancho,
           alto: medidas.alto,
           peso: medidas.peso,
-          volumen: (medidas.largo * medidas.ancho * medidas.alto) / 1728, // Convertir a pies cúbicos
+          volumen: (medidas.largo * medidas.ancho * medidas.alto) / 1728,
         },
       });
 
-      // 2. Crear el paquete
       return await tx.paquete.create({
         data: {
-          descripcion: descripcion.trim(),
+          descripcion: desc.trim(),
           estado: "REGISTRADO",
-          almacenCodigo,
-          empleadoId: empleadoId,
-          origenId,
-          destinoId,
-          clienteOrigenId: clienteOrigenId,
-          clienteDestinoId: clienteDestinoId,
+          almacenCodigo: almacenCod,
+          empleadoId: empId,
+          origenId: origId,
+          destinoId: destId,
+          clienteOrigenId: cliOrigId,
+          clienteDestinoId: cliDestId,
           medidasId: medidasCreadas.id,
         },
         include: {
@@ -282,10 +296,10 @@ export async function POST(req: NextRequest) {
   }
 }
 
+
 // GET: Listar paquetes con paginación y filtros
 export async function GET(req: NextRequest) {
-  try 
-  {
+  try {
     const { searchParams } = new URL(req.url);
 
     // Filtros
@@ -295,6 +309,7 @@ export async function GET(req: NextRequest) {
     const clienteOrigenId = searchParams.get("clienteOrigenId");
     const clienteDestinoId = searchParams.get("clienteDestinoId");
     const tracking = searchParams.get("tracking");
+    const clienteId = searchParams.get("clienteId");
 
     // Ordenamiento (opcional)
     const sortField = searchParams.get("sort") || "tracking";
@@ -318,6 +333,13 @@ export async function GET(req: NextRequest) {
         { destinoId: Number(almacenCodigo) },
       ];
     }
+    
+    if (clienteId && !isNaN(Number(clienteId))) {
+      where.OR = [
+        { clienteOrigenId: Number(clienteId) },
+        { clienteDestinoId: Number(clienteId) },
+      ];
+    }
 
     if (clienteOrigenId && !isNaN(Number(clienteOrigenId))) {
       where.clienteOrigenId = Number(clienteOrigenId);
@@ -339,7 +361,6 @@ export async function GET(req: NextRequest) {
     else orderBy.tracking = "desc";
 
     // 1. Filtro combinado cliente (origen o destino)
-    const clienteId = searchParams.get("clienteId");
     if (clienteId && !isNaN(Number(clienteId))) {
       where.OR = [
         { clienteOrigenId: Number(clienteId) },

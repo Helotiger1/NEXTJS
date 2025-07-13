@@ -8,8 +8,19 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // 1. Validación básica de campos
-    const errores = validarUsuario(body);
+    // Desempaquetar datos planos a estructura esperada
+    const datosTransformados = {
+      cedula: body.cedula,
+      nombre: body.nombre,
+      apellido: body.apellido,
+      email: body.email,
+      telefono: body.telefono,
+      contrasena: body.contrasena,
+      rol: body.rol || Rol.CLIENTE, // Valor por defecto
+    };
+
+    // 1. Validación básica de campos (usar datosTransformados)
+    const errores = validarUsuario(datosTransformados);
     if (errores.length > 0) {
       return NextResponse.json(
         {
@@ -21,28 +32,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const {
-      cedula,
-      nombre,
-      apellido,
-      email,
-      telefono,
-      contrasena,
-      rol = Rol.CLIENTE, // Asignar rol por defecto si no se proporciona
-    } = body;
-
     // 2. Verificar unicidad (cedula/email)
     const usuarioExistente = await prisma.usuario.findFirst({
       where: {
-        OR: [{ cedula }, { email }],
+        OR: [
+          { cedula: datosTransformados.cedula },
+          { email: datosTransformados.email },
+        ],
       },
     });
 
     if (usuarioExistente) {
       const detallesError = [];
-      if (usuarioExistente.cedula === cedula)
+      if (usuarioExistente.cedula === datosTransformados.cedula)
         detallesError.push("La cédula ya está registrada");
-      if (usuarioExistente.email === email)
+      if (usuarioExistente.email === datosTransformados.email)
         detallesError.push("El email ya está registrado");
 
       return NextResponse.json(
@@ -56,17 +60,17 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Hash de contraseña
-    const hashedPassword = await bcrypt.hash(contrasena, 12);
+    const hashedPassword = await bcrypt.hash(datosTransformados.contrasena, 12);
 
     // 4. Crear usuario con transacción
     const nuevoUsuario = await prisma.$transaction(async (tx) => {
       const usuario = await tx.usuario.create({
         data: {
-          cedula,
-          nombre,
-          apellido,
-          email,
-          telefono,
+          cedula: datosTransformados.cedula,
+          nombre: datosTransformados.nombre,
+          apellido: datosTransformados.apellido,
+          email: datosTransformados.email,
+          telefono: datosTransformados.telefono,
           contrasena: hashedPassword,
         },
       });
@@ -74,7 +78,7 @@ export async function POST(req: NextRequest) {
       await tx.usuarioRol.create({
         data: {
           usuarioId: usuario.id,
-          rol: rol,
+          rol: datosTransformados.rol,
         },
       });
 
@@ -90,7 +94,7 @@ export async function POST(req: NextRequest) {
           cedula: nuevoUsuario.cedula,
           nombre: nuevoUsuario.nombre,
           email: nuevoUsuario.email,
-          rol: rol,
+          rol: datosTransformados.rol,
         },
       },
       { status: 201 }
@@ -168,8 +172,8 @@ export async function GET(req: NextRequest) {
         id: "asc",
       },
     });
-    
-//Esta tambien esta rota de default, solo la comente, y la respuesta deje los usuarios no me sirve de nada lo demas
+
+    //Esta tambien esta rota de default, solo la comente, y la respuesta deje los usuarios no me sirve de nada lo demas
     return NextResponse.json(usuarios);
   } catch (error) {
     console.error("Error en GET /api/usuario:", error);

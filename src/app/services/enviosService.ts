@@ -4,7 +4,6 @@ import { paquete } from "./paqueteService";
 interface envioPayload{
     tipo : string;
     estado : string
-    fechaSalida?: string
     fechaLlegada?: string
     almacenOrigen: string;
     almacenEnvio: string;

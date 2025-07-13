@@ -1,5 +1,7 @@
+
+"use client";
+
 import { Field } from "../../(shared)/components/forms/types";
-import { getAlmacenes } from "../facturas/configs";
 export const formConfig: Field[] = [
     {
         name: "tipoEnvio",
@@ -26,6 +28,48 @@ export const formConfig: Field[] = [
 
 
 
+import { almacenService } from "@/app/services/almacenService";
+
+type Option = {
+    value: string | number;
+    label: string;
+};
+
+export async function getAlmacenes() {
+    const data = await almacenService.obtenerTodos();
+    return toOptions(data);
+}
+
+export function toOptions(data: any[]): Option[] {
+    return data.map((item) => ({
+        value: item.codigo, // o cualquier identificador único
+        label: `${item.estado} - ${item.ciudad}`,
+    }));
+}
+
+export const getColumns: any = (handleCheck: (row: any, checked: boolean) => void, array: any, id :any ) => [
+  {key: "cedulaDueña", label: "Cedula dueña"},
+    { key: "tracking", label: "Tracking" },
+    { key: "descripcion", label: "Descripción" },
+    { key: "origen", label: "Origen" },
+    { key: "destino", label: "Destino" },
+    { key: "peso", label: "Peso" },
+    { key: "alto", label: "Alto" },
+    { key: "largo", label: "Largo" },
+    { key: "volumen", label: "Volumen" },
+    { key: "fecha", label: "Fecha" },
+    {
+        key: "seleccionado",
+        label: "Seleccionar",
+        render: (_: any, row: any) => (
+            <input
+            checked={array.some((item:any) => item[id] === row[id])}
+                type="checkbox"
+                onChange={(e) => handleCheck(row, e.target.checked)}
+            />
+        ),
+    },
+];
 
 
 import React from "react";

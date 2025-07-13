@@ -14,27 +14,31 @@ enum Rol {
 }
 
 model Usuario {
-  id Int @id @default(autoincrement())
-  cedula     String       @unique
+  id         Int     @id @default(autoincrement())
+  cedula     String  @unique
   nombre     String
   apellido   String
-  email      String       @unique
+  email      String  @unique
   telefono   String
   contrasena String
+  activo     Boolean @default(true)
 
-  roles      UsuarioRol[]
-  paquetes   Paquete[]    @relation("PaquetesRegistrados")
+  roles               UsuarioRol[]
+  paquetesRegistrados Paquete[]    @relation("PaquetesRegistradosPorEmpleado")
+  paquetesEnviados    Paquete[]    @relation("PaquetesEnviadosPorCliente")
+  paquetesRecibidos   Paquete[]    @relation("PaquetesRecibidosPorCliente")
 
-  facturas   Factura[]    @relation("FacturasCliente")
+  enviosRealizados Envio[] @relation("EnviosRealizados")
 
+  facturas Factura[] @relation("FacturasCliente")
 }
 
 model UsuarioRol {
-  id        Int    @id @default(autoincrement())
-  usuarioId String
+  id        Int @id @default(autoincrement())
+  usuarioId Int
   rol       Rol
 
-  usuario   Usuario @relation(fields: [usuarioId], references: [cedula])
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
 
   @@unique([usuarioId, rol])
 }
@@ -45,16 +49,16 @@ model Almacen {
   direccionId Int       @unique
   direccion   Direccion @relation(fields: [direccionId], references: [id])
 
-  paquetes          Paquete[]
-  origenEnvios      Envio[]    @relation("Origen")
-  destinoEnvios     Envio[]    @relation("Destino")
+  paquetes      Paquete[]
+  origenEnvios  Envio[]   @relation("OrigenEnvio")
+  destinoEnvios Envio[]   @relation("DestinoEnvio")
 
-  origenPaquetes    Paquete[]  @relation("PaqueteOrigen")
-  destinoPaquetes   Paquete[]  @relation("PaqueteDestino")
+  origenPaquetes  Paquete[] @relation("PaqueteOrigen")
+  destinoPaquetes Paquete[] @relation("PaqueteDestino")
 }
 
 model Direccion {
-  id           Int      @id @default(autoincrement())
+  id           Int    @id @default(autoincrement())
   linea1       String
   linea2       String
   pais         String
@@ -62,7 +66,7 @@ model Direccion {
   ciudad       String
   codigoPostal Int
 
-  almacen      Almacen?
+  almacen Almacen?
 }
 
 enum EstadoPaquete {
@@ -72,84 +76,94 @@ enum EstadoPaquete {
   ENTREGADO
   CANCELADO
 }
+
 model Paquete {
-  tracking        Int      @id @default(autoincrement())
-  descripcion     String
-  estado          EstadoPaquete
-  almacenCodigo   Int
-  empleadoCedula  String
-  medidasId       Int      @unique
-  origenId        Int
-  destinoId       Int
+  tracking             Int           @id @default(autoincrement())
+  descripcion          String
+  estado               EstadoPaquete
+  almacenCodigo        Int
+  empleadoId           Int
+  medidasId            Int           @unique
+  origenId             Int
+  destinoId            Int
+  clienteOrigenId      Int
+  clienteDestinoId     Int
 
-  medidas         Medidas  @relation(fields: [medidasId], references: [id])
-  almacen         Almacen  @relation(fields: [almacenCodigo], references: [codigo])
-  empleado        Usuario  @relation("PaquetesRegistrados", fields: [empleadoCedula], references: [cedula])
+  medidas  Medidas @relation(fields: [medidasId], references: [id])
+  almacen  Almacen @relation(fields: [almacenCodigo], references: [codigo])
+  empleado Usuario @relation("PaquetesRegistradosPorEmpleado", fields: [empleadoId], references: [id])
 
-  origen          Almacen  @relation("PaqueteOrigen", fields: [origenId], references: [codigo])
-  destino         Almacen  @relation("PaqueteDestino", fields: [destinoId], references: [codigo])
+  origen  Almacen @relation("PaqueteOrigen", fields: [origenId], references: [codigo])
+  destino Almacen @relation("PaqueteDestino", fields: [destinoId], references: [codigo])
 
-  detalleEnvio    DetalleEnvio[]
-  detalleFactura  DetalleFactura?
+  clienteOrigen  Usuario @relation("PaquetesEnviadosPorCliente", fields: [clienteOrigenId], references: [id])
+  clienteDestino Usuario @relation("PaquetesRecibidosPorCliente", fields: [clienteDestinoId], references: [id])
+
+  detalleEnvio   DetalleEnvio[]
+  detalleFactura DetalleFactura?
 }
 
 model Medidas {
-  id       Int     @id @default(autoincrement())
-  largo    Int
-  ancho    Int
-  alto     Int
-  peso     Int
-  volumen  Int
+  id      Int @id @default(autoincrement())
+  largo   Int
+  ancho   Int
+  alto    Int
+  peso    Int
+  volumen Int
 
-  paquete  Paquete?
+  paquete Paquete?
 }
 
 model Envio {
-  numero        Int       @id @default(autoincrement())
-  tipo          String
-  estado        String
-  fechaSalida   DateTime
-  fechaLlegada  DateTime
+  numero       Int      @id @default(autoincrement())
+  tipo         String
+  estado       String
+  fechaSalida  DateTime
+  fechaLlegada DateTime
 
-  almacenOrigen Int       @unique
-  almacenEnvio  Int       @unique
+  almacenOrigen Int @unique
+  almacenEnvio  Int @unique
 
-  Origen        Almacen   @relation("Origen", fields: [almacenOrigen], references: [codigo])
-  Envio         Almacen   @relation("Destino", fields: [almacenEnvio], references: [codigo])
+  empleadoCedula Int
 
-  detalleEnvio  DetalleEnvio[]
-  facturas      Factura[]
+  Origen Almacen @relation("OrigenEnvio", fields: [almacenOrigen], references: [codigo])
+  Envio  Almacen @relation("DestinoEnvio", fields: [almacenEnvio], references: [codigo])
+
+  empleado Usuario @relation("EnviosRealizados", fields: [empleadoCedula], references: [id])
+
+  detalleEnvio DetalleEnvio[]
+  facturas     Factura[]
 }
 
 model DetalleEnvio {
-  id              Int     @id @default(autoincrement())
+  id              Int @id @default(autoincrement())
   paqueteTracking Int
   envioNumero     Int
 
-  paquete         Paquete @relation(fields: [paqueteTracking], references: [tracking])
-  envio           Envio   @relation(fields: [envioNumero], references: [numero])
+  paquete Paquete @relation(fields: [paqueteTracking], references: [tracking])
+  envio   Envio   @relation(fields: [envioNumero], references: [numero])
 }
 
 model Factura {
-  numero         Int       @id @default(autoincrement())
-  estado         String
-  monto          Float
-  metodoPago     String
-  cantPiezas     Int
-  envioNumero    Int       @unique
-  clienteCedula  String
+  numero        Int    @id @default(autoincrement())
+  estado        String
+  monto         Float
+  metodoPago    String
+  cantPiezas    Int
+  envioNumero   Int    @unique
+  clienteCedula Int
 
-  envioNum       Envio     @relation(fields: [envioNumero], references: [numero])
-  cliente        Usuario   @relation("FacturasCliente", fields: [clienteCedula], references: [cedula])
+  envioNum Envio   @relation(fields: [envioNumero], references: [numero])
+  cliente  Usuario @relation("FacturasCliente", fields: [clienteCedula], references: [id])
 
   detalleFactura DetalleFactura[]
 }
 
 model DetalleFactura {
-  numero           Int     @id @default(autoincrement())
-  facturaNumero    Int
-  paqueteTracking  Int     @unique
+  numero          Int @id @default(autoincrement())
+  facturaNumero   Int
+  paqueteTracking Int @unique
 
-  factura          Factura @relation(fields: [facturaNumero], references: [numero])
-  paquete          Paquete @relation(fields: [paqueteTracking], references: [tracking])
+  factura Factura @relation(fields: [facturaNumero], references: [numero])
+  paquete Paquete @relation(fields: [paqueteTracking], references: [tracking])
 }

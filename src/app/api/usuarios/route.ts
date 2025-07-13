@@ -1,116 +1,154 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient, Rol } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/app/lib/prisma";
+import { Rol } from "@prisma/client";
+import bcrypt from "bcryptjs";
+import { validarUsuario } from "@lib/Validaciones_Usuarios";
 
-const prisma = new PrismaClient();
-
-// POST: Crear un nuevo usuario (cliente por defecto)
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // Extraer los campos, acepta que venga 'contraseña' con ñ del frontend
+    // 1. Validación básica de campos
+    const errores = validarUsuario(body);
+    if (errores.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Error de validación",
+          details: errores,
+        },
+        { status: 400 }
+      );
+    }
+
     const {
       cedula,
       nombre,
       apellido,
       email,
       telefono,
-      contraseña, // viene con ñ del JSON
-      rol = 'CLIENTE',
+      contrasena,
+      rol = Rol.CLIENTE, // Asignar rol por defecto si no se proporciona
     } = body;
 
-    console.log(body);
-    // Validaciones básicas
-    if (!cedula || !nombre || !apellido || !email || !telefono || !contraseña) {
-      return NextResponse.json({ error: 'Todos los campos son obligatorios' }, { status: 400 });
-    }
-
-    // Validar email con regex
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json({ error: 'Email inválido' }, { status: 400 });
-    }
-
-    // Validar si ya existe el usuario por cédula o email
-    const usuarioExistente = await prisma.usuario.findUnique({ where: { cedula } });
-    const emailExistente = await prisma.usuario.findFirst({ where: { email } });
-
-    if (usuarioExistente) {
-      return NextResponse.json({ error: 'Cédula ya registrada' }, { status: 400 });
-    }
-
-    if (emailExistente) {
-      return NextResponse.json({ error: 'Email ya registrado' }, { status: 400 });
-    }
-
-    // Hashear la contraseña (nota: aquí 'contraseña' se usa solo como variable temporal)
-    const hashedPassword = await bcrypt.hash(contraseña, 10);
-
-    // Crear usuario en la base con campo 'contrasena' (sin ñ)
-    const nuevoUsuario = await prisma.usuario.create({
-      data: {
-        cedula,
-        nombre,
-        apellido,
-        email,
-        telefono,
-        contrasena: hashedPassword, // campo en la BD sin ñ
-        roles: {
-          create: {
-            rol: rol.toUpperCase() as Rol,
-          },
-        },
-      },
-      include: {
-        roles: true,
+    // 2. Verificar unicidad (cedula/email)
+    const usuarioExistente = await prisma.usuario.findFirst({
+      where: {
+        OR: [{ cedula }, { email }],
       },
     });
 
-    return NextResponse.json({ mensaje: 'Usuario creado exitosamente', usuario: nuevoUsuario }, { status: 201 });
+    if (usuarioExistente) {
+      const detallesError = [];
+      if (usuarioExistente.cedula === cedula)
+        detallesError.push("La cédula ya está registrada");
+      if (usuarioExistente.email === email)
+        detallesError.push("El email ya está registrado");
 
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Conflicto de datos",
+          details: detallesError,
+        },
+        { status: 409 }
+      );
+    }
+
+    // 3. Hash de contraseña
+    const hashedPassword = await bcrypt.hash(contrasena, 12);
+
+    // 4. Crear usuario con transacción
+    const nuevoUsuario = await prisma.$transaction(async (tx) => {
+      const usuario = await tx.usuario.create({
+        data: {
+          cedula,
+          nombre,
+          apellido,
+          email,
+          telefono,
+          contrasena: hashedPassword,
+        },
+      });
+
+      await tx.usuarioRol.create({
+        data: {
+          usuarioId: usuario.id,
+          rol: rol,
+        },
+      });
+
+      return usuario;
+    });
+
+    // 5. Respuesta exitosa (sin datos sensibles)
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          id: nuevoUsuario.id,
+          cedula: nuevoUsuario.cedula,
+          nombre: nuevoUsuario.nombre,
+          email: nuevoUsuario.email,
+          rol: rol,
+        },
+      },
+      { status: 201 }
+    );
   } catch (error) {
-    console.error('Error creando usuario:', error);
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+    console.error("Error en POST /api/usuario:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Error interno del servidor",
+        details:
+          process.env.NODE_ENV === "development" && error instanceof Error
+            ? error.message
+            : undefined,
+      },
+      { status: 500 }
+    );
   }
 }
 
-// GET: Obtener todos los usuarios con paginación y filtro por rol
-export async function GET(req: Request) {
+// GET - Obtener usuarios
+export async function GET() {
   try {
-    const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get('page') ?? '1', 10);
-    const limit = parseInt(searchParams.get('limit') ?? '10', 10);
-    const rolQuery = searchParams.get('rol')?.toUpperCase();
-
-    const skip = (page - 1) * limit;
-
-    const where = rolQuery && Object.values(Rol).includes(rolQuery as Rol)
-      ? {
-          roles: {
-            some: {
-              rol: rolQuery as Rol,
-            },
-          },
-        }
-      : {};
-
     const usuarios = await prisma.usuario.findMany({
-      where,
-      skip,
-      take: limit,
-      include: {
-        roles: true,
+      select: {
+        id: true,
+        cedula: true,
+        nombre: true,
+        apellido: true,
+        telefono: true,
+        email: true,
+        activo: true,
+        roles: {
+          select: {
+            rol: true,
+          },
+        },
+      },
+      orderBy: {
+        id: "asc",
       },
     });
 
-    // Opcional: total, si lo necesitas para paginación
-    // const total = await prisma.usuario.count({ where });
-
-    return NextResponse.json(usuarios);
-
+    return NextResponse.json({
+      success: true,
+      data: usuarios.map((u) => ({
+        ...u,
+        roles: u.roles.map((r) => r.rol),
+      })),
+    });
   } catch (error) {
-    console.error('Error al obtener usuarios:', error);
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+    console.error("Error en GET /api/usuario:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Error al obtener usuarios",
+      },
+      { status: 500 }
+    );
   }
 }

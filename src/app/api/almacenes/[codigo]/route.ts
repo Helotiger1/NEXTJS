@@ -1,178 +1,214 @@
-import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import {
-    validarDireccion,
-    validarTelefono,
-    DireccionInput,
-} from "@/app/lib/Validaciones_Almacenes";
+import { NextRequest, NextResponse } from 'next/server'
+import prisma from '@lib/prisma'
+import { validarTelefono, validarDireccion } from '@lib/Validaciones_Almacenes'
 
-const prisma = new PrismaClient();
-
-// GET /api/almacenes/:codigo
-export async function GET(
-    request: Request,
-    { params }: { params: { codigo: string } }
-) {
-    try {
-        const codigoNum = Number(params.codigo);
-        if (isNaN(codigoNum)) {
-            return NextResponse.json(
-                { error: "Código inválido" },
-                { status: 400 }
-            );
-        }
-
-        const almacen = await prisma.almacen.findUnique({
-            where: { codigo: codigoNum },
-            include: { direccion: true },
-        });
-
-        if (!almacen) {
-            return NextResponse.json(
-                { error: "Almacén no encontrado" },
-                { status: 404 }
-            );
-        }
-
-        return NextResponse.json(almacen);
-    } catch (error) {
-        console.error("ERROR GET /api/almacenes/[codigo] →", error);
-        return NextResponse.json(
-            { error: "Error interno del servidor" },
-            { status: 500 }
-        );
-    }
-}
-
-// PUT /api/almacenes/:id
-export async function PUT(
-  request: Request,
-  { params }: { params: { codigo: string } }
-) {
+// GET - Obtener un almacén específico
+export async function GET(req: NextRequest, { params }: { params: { codigo: string } }) {
   try {
-    const codigo = Number(params.codigo);
-    const body = await request.json();
-    console.log("Si llego ", body, codigo)
+    const codigo = parseInt(params.codigo)
+    
+    if (isNaN(codigo)) {
+      return NextResponse.json(
+        { success: false, error: "Código de almacén inválido" },
+        { status: 400 }
+      )
+    }
 
     const almacen = await prisma.almacen.findUnique({
       where: { codigo },
-    });
+      include: {
+        direccion: true,
+        _count: {
+          select: {
+            paquetes: true,
+            origenEnvios: true,
+            destinoEnvios: true
+          }
+        }
+      }
+    })
 
     if (!almacen) {
       return NextResponse.json(
-        { error: "Almacén no encontrado" },
+        { success: false, error: "Almacén no encontrado" },
         { status: 404 }
-      );
+      )
     }
 
-    // Validar teléfono si existe
-    if (body.telefono !== undefined) {
-      const errorTelefono = validarTelefono(body.telefono);
-      if (errorTelefono) {
-        return NextResponse.json(
-          { error: errorTelefono },
-          { status: 400 }
-        );
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...almacen,
+        paquetesEnAlmacen: almacen._count.paquetes,
+        enviosOrigen: almacen._count.origenEnvios,
+        enviosDestino: almacen._count.destinoEnvios
       }
-    }
+    })
 
-    // Validar dirección si existe
-    if (body.direccion) {
-      const { id: dirId, ...camposDireccion } = body.direccion;
-
-      if (almacen.direccionId !== dirId) {
-        return NextResponse.json(
-          { error: "La dirección no pertenece a este almacén" },
-          { status: 403 }
-        );
-      }
-
-      const errorDireccion = validarDireccion(
-        camposDireccion as DireccionInput
-      );
-
-      if (errorDireccion) {
-        return NextResponse.json(
-          { error: errorDireccion },
-          { status: 400 }
-        );
-      }
-
-      await prisma.direccion.update({
-        where: { id: dirId },
-        data: camposDireccion,
-      });
-    }
-
-    // Actualizar teléfono si aplica
-    if (body.telefono !== undefined) {
-      await prisma.almacen.update({
-        where: { codigo },
-        data: { telefono: body.telefono },
-      });
-    }
-
-    // Traer datos actualizados
-    const almacenActualizado = await prisma.almacen.findUnique({
-      where: { codigo },
-      include: { direccion: true },
-    });
-
-    return NextResponse.json(almacenActualizado);
-  } catch (error: unknown) {
+  } catch (error) {
+    console.error('Error al obtener almacén:', error)
     return NextResponse.json(
-      {
-        error: "Error al actualizar almacén",
-        details: error instanceof Error ? error.message : String(error),
-      },
+      { success: false, error: "Error interno del servidor" },
       { status: 500 }
-    );
+    )
   }
 }
 
-// DELETE /api/almacenes/:id
-export async function DELETE(
-    request: Request,
-    { params }: { params: { codigo: string } }
-) {
-    try {
-const codigo = Number(params.codigo);
-      console.log("el registro dice 10 pero, aqui dice:",codigo)
-        const almacen = await prisma.almacen.findUnique({ where: { codigo } });
-        if (!almacen) {
-            return NextResponse.json(
-                { error: "Almacén no encontrado" },
-                { status: 404 }
-            );
-        }
+// PATCH - Actualizar almacén
+export async function PATCH(req: NextRequest, { params }: { params: { codigo: string } }) {
+  try {
+    const codigo = parseInt(params.codigo)
+    const requestData = await req.json()
 
-        const paquetes = await prisma.paquete.findMany({
-            where: { almacenCodigo: codigo },
-        });
-        if (paquetes.length > 0) {
-            return NextResponse.json(
-                {
-                    error: "No se puede eliminar: hay paquetes asignados a este almacén",
-                },
-                { status: 409 }
-            );
-        }
-
-        await prisma.$transaction([
-            prisma.almacen.delete({ where: { codigo } }),
-            prisma.direccion.delete({ where: { id: almacen.direccionId } }),
-        ]);
-
-        return NextResponse.json({
-            message: "Almacén eliminado correctamente",
-        });
-    } catch (error: unknown) {
-        return NextResponse.json(
-            {
-                error: "Error al eliminar almacén",
-                details: error instanceof Error ? error.message : String(error),
-            },
-            { status: 500 }
-        );
+    if (isNaN(codigo)) {
+      return NextResponse.json(
+        { success: false, error: "Código de almacén inválido" },
+        { status: 400 }
+      )
     }
+
+    // Validar datos recibidos
+    const errores = [
+      ...(requestData.telefono ? validarTelefono(requestData.telefono) : []),
+      ...(requestData.direccion ? validarDireccion(requestData.direccion) : [])
+    ]
+
+    if (errores.length > 0) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: "Datos inválidos",
+          details: errores 
+        },
+        { status: 400 }
+      )
+    }
+
+    // Actualización transaccional
+    const almacenActualizado = await prisma.$transaction(async (tx) => {
+      const almacenExistente = await tx.almacen.findUnique({
+        where: { codigo },
+        include: { direccion: true }
+      })
+
+      if (!almacenExistente) {
+        throw new Error("Almacén no encontrado")
+      }
+
+      // Actualizar dirección si se proporciona
+      if (requestData.direccion) {
+        await tx.direccion.update({
+          where: { id: almacenExistente.direccionId },
+          data: {
+            linea1: requestData.direccion.linea1 || almacenExistente.direccion.linea1,
+            linea2: requestData.direccion.linea2 || almacenExistente.direccion.linea2,
+            pais: requestData.direccion.pais || almacenExistente.direccion.pais,
+            estado: requestData.direccion.estado || almacenExistente.direccion.estado,
+            ciudad: requestData.direccion.ciudad || almacenExistente.direccion.ciudad,
+            codigoPostal: requestData.direccion.codigoPostal || almacenExistente.direccion.codigoPostal
+          }
+        })
+      }
+
+      // Actualizar teléfono si se proporciona
+      if (requestData.telefono) {
+        return await tx.almacen.update({
+          where: { codigo },
+          data: { telefono: requestData.telefono.toString() },
+          include: { direccion: true }
+        })
+      }
+
+      return almacenExistente
+    })
+
+    return NextResponse.json({
+      success: true,
+      data: almacenActualizado
+    })
+
+  } catch (error) {
+    console.error('Error al actualizar almacén:', error)
+    return NextResponse.json(
+      { 
+        success: false,
+        error: typeof error === "object" && error !== null && "message" in error
+          ? (error as { message?: string }).message || "Error interno del servidor"
+          : "Error interno del servidor"
+      },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE - Eliminar almacén (con validación de relaciones)
+export async function DELETE(req: NextRequest, { params }: { params: { codigo: string } }) {
+  try {
+    const codigo = parseInt(params.codigo)
+
+    if (isNaN(codigo)) {
+      return NextResponse.json(
+        { success: false, error: "Código de almacén inválido" },
+        { status: 400 }
+      )
+    }
+
+    // Verificar relaciones activas
+    const relaciones = await prisma.$transaction([
+      prisma.paquete.count({ where: { OR: [
+        { origenId: codigo },
+        { destinoId: codigo }
+      ] }}),
+      prisma.envio.count({ where: { OR: [
+        { almacenOrigen: codigo },
+        { almacenEnvio: codigo }
+      ] }})
+    ])
+
+    const [totalPaquetes, totalEnvios] = relaciones
+
+    if (totalPaquetes > 0 || totalEnvios > 0) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: "No se puede eliminar el almacén porque tiene relaciones activas",
+          details: {
+            paquetesRelacionados: totalPaquetes,
+            enviosRelacionados: totalEnvios
+          }
+        },
+        { status: 400 }
+      )
+    }
+
+    // Eliminar en transacción
+    await prisma.$transaction(async (tx) => {
+      const almacen = await tx.almacen.findUnique({
+        where: { codigo },
+        select: { direccionId: true }
+      })
+
+      if (!almacen) throw new Error("Almacén no encontrado")
+
+      await tx.almacen.delete({ where: { codigo } })
+      await tx.direccion.delete({ where: { id: almacen.direccionId } })
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: "Almacén eliminado correctamente"
+    })
+
+  } catch (error) {
+    console.error('Error al eliminar almacén:', error)
+    return NextResponse.json(
+      { 
+        success: false,
+        error: typeof error === "object" && error !== null && "message" in error
+          ? (error as { message?: string }).message || "Error interno del servidor"
+          : "Error interno del servidor"
+      },
+      { status: 500 }
+    )
+  }
 }

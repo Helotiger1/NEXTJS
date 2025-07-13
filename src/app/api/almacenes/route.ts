@@ -1,74 +1,142 @@
-import { NextResponse } from "next/server";
-import { PrismaClient } from '@prisma/client';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@lib/prisma";
 import {
-  validarTelefono,
-} from "@/app/lib/Validaciones_Almacenes";
-import { DireccionInput } from "@/app/lib/Validaciones_Direcciones";
+  validarAlmacenCompleto,
+  validarAlmacenUnico,
+} from "@lib/Validaciones_Almacenes";
 
-const prisma = new PrismaClient();
-
-// POST /api/almacenes - crear un nuevo almacén
-export async function POST(request: Request) {
+// POST - Crear nuevo almacén
+export async function POST(req: NextRequest) {
   try {
+<<<<<<< HEAD
     const body = await request.json();
     console.log( body)
     const { telefono, ...direccion } = body;
+=======
+    const requestData = await req.json();
+>>>>>>> d73ad264bcb208aa2466ce1f2a88901fdcffe08b
 
-    // Validar teléfono
-    const errorTelefono = validarTelefono(telefono);
-    if (errorTelefono) {
-      return NextResponse.json({ error: errorTelefono }, { status: 400 });
+    // Convertir código postal a número si es necesario
+    if (requestData.direccion?.codigoPostal) {
+      requestData.direccion.codigoPostal = parseInt(
+        requestData.direccion.codigoPostal
+      );
+      if (isNaN(requestData.direccion.codigoPostal)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Datos inválidos",
+            details: ["El código postal debe ser un número válido"],
+          },
+          { status: 400 }
+        );
+      }
     }
 
-    if (typeof direccion.codigoPostal !== 'number') {
-  const convertido = Number(direccion.codigoPostal);
-
-  if (isNaN(convertido)) {
-    throw new Error("El código postal debe ser un número válido.");
-  }
-
-  direccion.codigoPostal = convertido;
-}
-    // Validar datos mínimos de dirección
-    if (!direccion || typeof direccion !== "object") {
-      return NextResponse.json({ error: "Dirección inválida o ausente" }, { status: 400 });
+    // 1. Validación básica de campos requeridos
+    const erroresValidacion = validarAlmacenCompleto(requestData);
+    if (erroresValidacion.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Datos inválidos",
+          details: erroresValidacion,
+        },
+        { status: 400 }
+      );
     }
 
-    // Crear dirección primero
-    const nuevaDireccion = await prisma.direccion.create({
-      data: direccion,
+    const { telefono, direccion } = requestData;
+
+    // 2. Validar unicidad (almacén no duplicado)
+    const erroresUnicidad = await validarAlmacenUnico({ telefono, direccion });
+    if (erroresUnicidad.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Conflicto de datos",
+          details: erroresUnicidad,
+        },
+        { status: 409 }
+      );
+    }
+
+    // 3. Crear en transacción
+    const almacen = await prisma.$transaction(async (tx) => {
+      const nuevaDireccion = await tx.direccion.create({
+        data: {
+          linea1: direccion.linea1!,
+          linea2: direccion.linea2 || "",
+          pais: direccion.pais!,
+          estado: direccion.estado!,
+          ciudad: direccion.ciudad!,
+          codigoPostal: direccion.codigoPostal,
+        },
+      });
+
+      return await tx.almacen.create({
+        data: {
+          telefono: telefono.toString(),
+          direccionId: nuevaDireccion.id,
+        },
+        include: { direccion: true },
+      });
     });
 
-    // Crear almacén apuntando a la dirección creada
-    const nuevoAlmacen = await prisma.almacen.create({
-      data: {
-        telefono,
-        direccionId: nuevaDireccion.id,
+    return NextResponse.json(
+      {
+        success: true,
+        data: almacen,
       },
-      include: {
-        direccion: true,
-      },
-    });
-
-    return NextResponse.json(nuevoAlmacen, { status: 201 });
-
+      { status: 201 }
+    );
   } catch (error) {
-    console.error("ERROR POST /api/almacenes →", error);
-    return NextResponse.json({ error: "Error al crear almacén" }, { status: 500 });
+    console.error("Error al crear almacén:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Error interno del servidor",
+        details:
+          process.env.NODE_ENV === "development" && error instanceof Error
+            ? error.message
+            : undefined,
+      },
+      { status: 500 }
+    );
   }
 }
 
-// GET /api/almacenes - listar todos los almacenes
+// GET - Listar todos los almacenes
 export async function GET() {
   try {
     const almacenes = await prisma.almacen.findMany({
-      include: { direccion: true },
+      include: {
+        direccion: true,
+        _count: {
+          select: {
+            paquetes: true,
+            origenEnvios: true,
+            destinoEnvios: true,
+          },
+        },
+      },
+      orderBy: {
+        codigo: "asc",
+      },
     });
-    return NextResponse.json(almacenes);
+
+    return NextResponse.json({
+      success: true,
+      data: almacenes,
+      count: almacenes.length,
+    });
   } catch (error) {
-    console.error("ERROR GET /api/almacenes →", error);
+    console.error("Error al obtener almacenes:", error);
     return NextResponse.json(
-      { error: "Error al obtener almacenes" },
+      {
+        success: false,
+        error: "Error interno del servidor",
+      },
       { status: 500 }
     );
   }

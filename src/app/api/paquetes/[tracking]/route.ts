@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/prisma";
 import {
-  validarEstadoPaquete,
+  validarEstadoPaqueteString,
   estadosPaquetePermitidos,
 } from "@/app/lib/Validaciones_Paquetes";
 import { Prisma } from "@prisma/client";
@@ -142,7 +142,7 @@ export async function PUT(req: NextRequest, { params }: TrackingParams) {
 
     const errores = [];
 
-    if (estado && !validarEstadoPaquete(estado)) {
+    if (estado && !validarEstadoPaqueteString(estado)) {
       errores.push(
         `Estado inválido. Valores permitidos: ${estadosPaquetePermitidos.join(
           ", "

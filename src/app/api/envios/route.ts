@@ -1,42 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient, Prisma } from "@prisma/client";
-import { calcularCostoEnvio } from "@/app/lib/Logica_Negocio"; // Asegúrate de que esta función esté definida correctamente
 
 const prisma = new PrismaClient();
 
 // Tipos para TypeScript
 
-
 // GET: Obtener envíos con paginación y filtros
 export async function GET(req: NextRequest) {
   try {
 
-    //Otra vez hare el mismo chiste, no movi mas nada,
-    return NextResponse.json([
-  {
-    cod: "A1",
-    origen: "Miami",
-    destino: "Caracas",
-    fechaSalida: "2025-07-14",
-    tipo: "Barco",
-    estado: "pendiente",
-  },
-  {
-    cod: "B2",
-    origen: "Bogotá",
-    destino: "Panamá",
-    fechaSalida: "2025-07-15",
-    tipo: "Avión",
-    estado: "enviado",
-  },
-  {
-    cod: "C3",
-    origen: "Buenos Aires",
-    destino: "Santiago",
-    fechaSalida: "2025-07-12",
-    tipo: "Camión",
-    estado: "entregado",
-  }])
     const { searchParams } = new URL(req.url);
 
     // Paginación
@@ -58,35 +30,35 @@ export async function GET(req: NextRequest) {
     if (tipo) where.tipo = tipo.toLowerCase();
     if (almacenOrigen) where.almacenOrigen = Number(almacenOrigen);
     if (almacenDestino) where.almacenEnvio = Number(almacenDestino);
-    
+
     if (desde || hasta) {
       where.fechaSalida = {};
       if (desde) where.fechaSalida.gte = new Date(desde);
       if (hasta) where.fechaSalida.lte = new Date(hasta);
     }
 
-    const [envios, total] = await Promise.all([
+    const [envios] = await Promise.all([
       prisma.envio.findMany({
         where,
         include: {
           Origen: true,
           Envio: true,
           detalleEnvio: {
-            include: { 
-              paquete: { 
-                include: { 
+            include: {
+              paquete: {
+                include: {
                   medidas: true,
                   destino: true,
-                  origen: true
-                } 
-              } 
+                  origen: true,
+                },
+              },
             },
           },
           facturas: {
             include: {
-              cliente: true
-            }
-          }
+              cliente: true,
+            },
+          },
         },
         skip,
         take: limit,
@@ -95,9 +67,37 @@ export async function GET(req: NextRequest) {
       prisma.envio.count({ where }),
     ]);
 
-    return NextResponse.json(
-      envios,
-    );
+    
+    /*/Otra vez hare el mismo chiste, no movi mas nada,
+    return NextResponse.json([
+      {
+        cod: "A1",
+        origen: "Miami",
+        destino: "Caracas",
+        fechaSalida: "2025-07-14",
+        tipo: "Barco",
+        estado: "pendiente",
+      },
+      {
+        cod: "B2",
+        origen: "Bogotá",
+        destino: "Panamá",
+        fechaSalida: "2025-07-15",
+        tipo: "Avión",
+        estado: "enviado",
+      },
+      {
+        cod: "C3",
+        origen: "Buenos Aires",
+        destino: "Santiago",
+        fechaSalida: "2025-07-12",
+        tipo: "Camión",
+        estado: "entregado",
+      }
+    ]);*/
+
+    return NextResponse.json(envios);
+    
   } catch (error) {
     console.error("Error obteniendo envíos:", error);
     return NextResponse.json(
@@ -106,4 +106,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-

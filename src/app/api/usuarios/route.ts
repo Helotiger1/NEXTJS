@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
 // GET - Obtener usuarios
 export async function GET() {
   try {
-    const usuarios = await prisma.usuario.findMany({
+    const usuarios = await prisma.usuario.findMany(/* {
       select: {
         id: true,
         cedula: true,
@@ -132,15 +132,9 @@ export async function GET() {
       orderBy: {
         id: "asc",
       },
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: usuarios.map((u) => ({
-        ...u,
-        roles: u.roles.map((r) => r.rol),
-      })),
-    });
+    } */);
+//Esta tambien esta rota de default, solo la comente, y la respuesta deje los usuarios no me sirve de nada lo demas
+    return NextResponse.json(usuarios);
   } catch (error) {
     console.error("Error en GET /api/usuario:", error);
     return NextResponse.json(

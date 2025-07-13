@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React from "react";
 import useCRUD from "../../hooks/useForm";
 import { useCRUDForm } from "../../hooks/useCRUDForm";
@@ -10,19 +10,23 @@ import { Field } from "../forms/types";
 
 interface DynamicCRUDProps<TData extends Object, TResult extends Object> {
     service: CrudService<TData, TResult>;
-    id: keyof TResult;
+    id: keyof TData;
     initState: TResult;
     formConfig: Field[];
     getColumns: any;
-    checks?: boolean
+    checks?: boolean;
 }
 
-export default function DynamicCRUD<TData extends Object, TResult extends Object = TData >({
+export default function DynamicCRUD<
+    TData extends Object,
+    TResult extends Object = TData
+>({
     service,
     id,
     initState,
     formConfig,
-    getColumns, checks = false
+    getColumns,
+    checks = false,
 }: DynamicCRUDProps<TData, TResult>) {
     const { data, loading, error, updater } = useCRUDForm(service);
 
@@ -32,15 +36,30 @@ export default function DynamicCRUD<TData extends Object, TResult extends Object
         handleEdit,
         handleCancel,
         handleDelete,
-        handleSubmit, array, handleCheck
+        handleSubmit,
+        array,
+        handleCheck,
     } = useCRUD<TData, TResult>(service, id, initState, updater, checks);
-    
-    const columns = checks? getColumns(handleDelete, handleEdit) : getColumns(handleCheck, array, id);
 
-    
+    const columns = checks
+        ?  getColumns(handleCheck, array, id) :  getColumns(handleDelete, handleEdit);
+        
+
     if (loading) return <p>Cargando...</p>;
     if (error) return <p>Error al cargar</p>;
-    console.log(data)
+
+
+    if (checks) {
+        return (
+            <>
+                <DynamicForm
+                    config={formConfig}
+                    onSubmit={handleSubmit}></DynamicForm>
+                <DynamicTable columns={columns} data={data}></DynamicTable>
+            </>
+        );
+    }
+
     if (form == null) {
         return (
             <>
@@ -57,7 +76,7 @@ export default function DynamicCRUD<TData extends Object, TResult extends Object
     }
 
     if (form) {
-const initialConfig = form ?? initState;
+        const initialConfig = form ?? initState;
         return (
             <DynamicForm
                 initConfig={initialConfig}

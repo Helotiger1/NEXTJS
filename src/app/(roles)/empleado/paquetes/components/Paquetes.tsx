@@ -1,7 +1,7 @@
 "use client"
 import DynamicCRUD from "@/app/(roles)/(shared)/components/CRUD/DynamicCRUD";
 import React from "react";
-import { formConfig, getColumns, initState } from "../../facturas/configs";
+import { formConfig, getColumns, initState } from "../configs";
 import { paqueteService } from "@/app/services/paqueteService";
 import { paquetePayload, paquete } from "@/app/services/paqueteService";
 export const Paquetes = () => {

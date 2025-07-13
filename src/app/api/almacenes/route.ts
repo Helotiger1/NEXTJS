@@ -8,13 +8,7 @@ import {
 // POST - Crear nuevo almacén
 export async function POST(req: NextRequest) {
   try {
-<<<<<<< HEAD
-    const body = await request.json();
-    console.log( body)
-    const { telefono, ...direccion } = body;
-=======
     const requestData = await req.json();
->>>>>>> d73ad264bcb208aa2466ce1f2a88901fdcffe08b
 
     // Convertir código postal a número si es necesario
     if (requestData.direccion?.codigoPostal) {
@@ -125,11 +119,7 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      data: almacenes,
-      count: almacenes.length,
-    });
+    return NextResponse.json(almacenes)
   } catch (error) {
     console.error("Error al obtener almacenes:", error);
     return NextResponse.json(

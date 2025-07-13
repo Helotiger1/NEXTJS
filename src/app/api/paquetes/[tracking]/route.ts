@@ -129,9 +129,15 @@ export async function GET(req: NextRequest, { params }: TrackingParams) {
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: TrackingParams) {
+
+
+
+
+export async function PUT(req: NextRequest, { params }: TrackingParams) {
   try {
+
     const body = await req.json();
+
     const { estado, almacenCodigo, empleadoCedula } = body;
 
     const errores = [];

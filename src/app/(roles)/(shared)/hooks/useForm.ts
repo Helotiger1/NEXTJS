@@ -3,7 +3,7 @@ import { useState } from "react";
 
 export default function useCRUD<TData, TResult>(
     service: CrudService<TData, TResult>,
-    key: keyof TResult,
+    key: keyof TData,
     initState: TResult,
     updater: () => void,
     checks: boolean
@@ -33,7 +33,6 @@ export default function useCRUD<TData, TResult>(
     };
 
     const handleEdit = (data: TResult) => {
-        console.log(data);
         setForm(data);
     };
 

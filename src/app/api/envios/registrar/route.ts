@@ -9,274 +9,240 @@ import {
 } from "@/app/lib/Validaciones_Paquetes";
 import { Prisma } from "@prisma/client";
 
-// POST: Crear nuevo paquete
+interface EnvioBody {
+  tipo: string;
+  estado: string;
+  fechaSalida: string;
+  fechaLlegada: string;
+  almacenOrigen: number;
+  almacenEnvio: number;
+  paquetes: number[];
+  clienteCedula: string; // Ahora lo recibimos en el body
+}
+
+interface UpdateEnvioBody {
+  estado?: string;
+  fechaLlegada?: string;
+}
+
+// Validaciones (actualizadas para coincidir con tus enums)
+function validarTipoEnvio(tipo: string): string | null {
+  const tiposValidos = ["barco", "avion"];
+  if (!tiposValidos.includes(tipo.toLowerCase())) {
+    return `Tipo de envío inválido. Debe ser: ${tiposValidos.join(", ")}`;
+  }
+  return null;
+}
+
+function validarEstadoEnvio(estado: string): string | null {
+  const estadosValidos = ["en puerto de salida", "en transito", "en destino"];
+  if (!estadosValidos.includes(estado.toLowerCase())) {
+    return `Estado inválido. Debe ser: ${estadosValidos.join(", ")}`;
+  }
+  return null;
+}
+
+function validarFecha(fecha: string, campo: string): string | null {
+  if (isNaN(Date.parse(fecha))) {
+    return `Fecha ${campo} inválida`;
+  }
+  return null;
+}
+
+// POST: Crear nuevo envío
 export async function POST(req: NextRequest) {
   try {
-
-    const body = await req.json();
-    console.log("Datos recibidos:", body);
-
-    // Procesamiento inicial de datos
-    const processedData = { ...body };
-
-    // Convertir medidas
-    if (processedData.medidas) {
-      processedData.medidas = {
-        largo: Number(processedData.medidas.largo),
-        ancho: Number(processedData.medidas.ancho),
-        alto: Number(processedData.medidas.alto),
-        peso: Number(processedData.medidas.peso),
-      };
-    }
-
-    // Convertir otros campos numéricos
-    const numericFields = [
-      "almacenCodigo",
-      "empleadoId",
-      "origenId",
-      "destinoId",
-      "clienteOrigenId",
-      "clienteDestinoId",
-    ];
-
-    numericFields.forEach((field) => {
-      if (processedData[field] !== undefined) {
-        const num = Number(processedData[field]);
-        if (isNaN(num)) {
-          throw new Error(`${field} debe ser un número válido`);
-        }
-        processedData[field] = num;
-      } else {
-        throw new Error(`${field} es requerido`);
-      }
-    });
-
-    const {
-      descripcion,
-      estado = "REGISTRADO",
-      almacenCodigo,
-      empleadoId,
-      medidas,
-      origenId,
-      destinoId,
-      clienteOrigenId,
-      clienteDestinoId,
-    } = processedData;
+    const body: EnvioBody = await req.json();
 
     // Validaciones básicas
-    const errors: Record<string, string> = {};
+    const errores = [
+      validarTipoEnvio(body.tipo),
+      validarEstadoEnvio(body.estado),
+      validarFecha(body.fechaSalida, "fechaSalida"),
+      validarFecha(body.fechaLlegada, "fechaLlegada"),
+    ].filter(Boolean);
 
-    // Validar descripción
-    const descError = validarTextoNoVacio(descripcion, "Descripción", {
-      maxLength: 500,
+    if (errores.length > 0) {
+      return NextResponse.json({ errors: errores }, { status: 400 });
+    }
+
+    // Validar fechas coherentes
+    if (new Date(body.fechaLlegada) < new Date(body.fechaSalida)) {
+      return NextResponse.json(
+        { error: "La fecha de llegada no puede ser anterior a la fecha de salida" },
+        { status: 400 }
+      );
+    }
+
+    // Validar almacenes
+    const [origen, destino] = await Promise.all([
+      prisma.almacen.findUnique({ where: { codigo: body.almacenOrigen } }),
+      prisma.almacen.findUnique({ where: { codigo: body.almacenEnvio } }),
+    ]);
+
+    if (!origen || !destino) {
+      return NextResponse.json(
+        { error: "Almacén de origen o destino no encontrado" },
+        { status: 404 }
+      );
+    }
+
+    // Validar paquetes
+    if (!Array.isArray(body.paquetes) || body.paquetes.length === 0) {
+      return NextResponse.json(
+        { error: "Debe incluir al menos un paquete" },
+        { status: 400 }
+      );
+    }
+
+    const paquetesExistentes = await prisma.paquete.findMany({
+      where: { tracking: { in: body.paquetes } },
+      include: { medidas: true }
     });
-    if (descError) errors.descripcion = descError;
 
-    // Validar estado
-    if (estado && !validarEstadoPaqueteString(estado)) {
-      errors.estado = "Estado de paquete inválido";
+    if (paquetesExistentes.length !== body.paquetes.length) {
+      return NextResponse.json(
+        { error: "Algunos paquetes no existen" },
+        { status: 404 }
+      );
     }
 
-    // Validar campos numéricos
-    const numericValidations = [
-      { field: "almacenCodigo", value: almacenCodigo, name: "Almacén" },
-      { field: "empleadoId", value: empleadoId, name: "Empleado" },
-      { field: "origenId", value: origenId, name: "Origen" },
-      { field: "destinoId", value: destinoId, name: "Destino" },
-      {
-        field: "clienteOrigenId",
-        value: clienteOrigenId,
-        name: "Cliente Origen",
-      },
-      {
-        field: "clienteDestinoId",
-        value: clienteDestinoId,
-        name: "Cliente Destino",
-      },
-    ];
-
-    numericValidations.forEach(({ field, value, name }) => {
-      const error = validarNumeroPositivo(value, name, { entero: true });
-      if (error) errors[field] = error;
+    // Validar que el cliente existe
+    const cliente = await prisma.usuario.findUnique({
+      where: { cedula: body.clienteCedula }
     });
 
-    // Validar medidas
-    const medidasError = validarMedidas(medidas);
-    if (medidasError) {
-      errors.medidas = medidasError;
-    }
-
-    if (Object.keys(errors).length > 0) {
-      console.error("Errores de validación:", errors);
-      return NextResponse.json({ success: false, errors }, { status: 400 });
-    }
-
-    // Validaciones de negocio
-    if (origenId === destinoId) {
+    if (!cliente) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "El almacén origen y destino no pueden ser el mismo",
-        },
-        { status: 400 }
+        { error: "Cliente no encontrado" },
+        { status: 404 }
       );
     }
 
-    if (clienteOrigenId === clienteDestinoId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "El cliente origen y destino no pueden ser el mismo",
-        },
-        { status: 400 }
-      );
-    }
-
-    if (estado && estado !== "REGISTRADO") {
-      return NextResponse.json(
-        { success: false, error: "El estado inicial debe ser REGISTRADO" },
-        { status: 400 }
-      );
-    }
-
-    // Verificar existencia de entidades relacionadas
-    const [almacen, empleado, origen, destino, clienteOrigen, clienteDestino] =
-      await Promise.all([
-        prisma.almacen.findUnique({ where: { codigo: almacenCodigo } }),
-        prisma.usuario.findUnique({
-          where: { id: empleadoId },
-          include: { roles: true },
-        }),
-        prisma.almacen.findUnique({ where: { codigo: origenId } }),
-        prisma.almacen.findUnique({ where: { codigo: destinoId } }),
-        prisma.usuario.findUnique({
-          where: { id: clienteOrigenId },
-          include: { roles: true },
-        }),
-        prisma.usuario.findUnique({
-          where: { id: clienteDestinoId },
-          include: { roles: true },
-        }),
-      ]);
-
-    // Validar referencias
-    if (!almacen) errors.almacenCodigo = "Almacén no encontrado";
-    if (!empleado) errors.empleadoId = "Empleado no encontrado";
-    if (!origen) errors.origenId = "Almacén origen no encontrado";
-    if (!destino) errors.destinoId = "Almacén destino no encontrado";
-    if (!clienteOrigen) errors.clienteOrigenId = "Cliente origen no encontrado";
-    if (!clienteDestino)
-      errors.clienteDestinoId = "Cliente destino no encontrado";
-
-    if (Object.keys(errors).length > 0) {
-      return NextResponse.json({ success: false, errors }, { status: 404 });
-    }
-
-    // Verificar roles
-    const empleadoTienePermiso = empleado!.roles.some((r) =>
-      ["EMPLEADO", "ADMIN"].includes(r.rol.toUpperCase())
-    );
-
-    if (!empleadoTienePermiso) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "El usuario no tiene permisos para registrar paquetes",
-        },
-        { status: 403 }
-      );
-    }
-
-    const clienteOrigenEsCliente = clienteOrigen!.roles.some(
-      (r) => r.rol.toUpperCase() === "CLIENTE"
-    );
-    const clienteDestinoEsCliente = clienteDestino!.roles.some(
-      (r) => r.rol.toUpperCase() === "CLIENTE"
-    );
-
-    if (!clienteOrigenEsCliente || !clienteDestinoEsCliente) {
-      return NextResponse.json(
-        { success: false, error: "Los clientes deben tener el rol CLIENTE" },
-        { status: 400 }
-      );
-    }
-
-    // Crear paquete en transacción
-    const nuevoPaquete = await prisma.$transaction(async (tx) => {
-      // 1. Crear las medidas
-      const medidasCreadas = await tx.medidas.create({
+    // Crear envío en una transacción
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Crear el envío
+      const nuevoEnvio = await tx.envio.create({
         data: {
-          largo: medidas.largo,
-          ancho: medidas.ancho,
-          alto: medidas.alto,
-          peso: medidas.peso,
-          volumen: (medidas.largo * medidas.ancho * medidas.alto) / 1728, // Convertir a pies cúbicos
-        },
-      });
-
-      // 2. Crear el paquete
-      return await tx.paquete.create({
-        data: {
-          descripcion: descripcion.trim(),
-          estado: "REGISTRADO",
-          almacenCodigo,
-          empleadoId: empleadoId,
-          origenId,
-          destinoId,
-          clienteOrigenId: clienteOrigenId,
-          clienteDestinoId: clienteDestinoId,
-          medidasId: medidasCreadas.id,
+          tipo: body.tipo.toLowerCase(),
+          estado: body.estado.toLowerCase(),
+          fechaSalida: new Date(body.fechaSalida),
+          fechaLlegada: new Date(body.fechaLlegada),
+          almacenOrigen: body.almacenOrigen,
+          almacenEnvio: body.almacenEnvio,
+          detalleEnvio: {
+            create: body.paquetes.map(tracking => ({ paqueteTracking: tracking })),
+          },
         },
         include: {
-          almacen: true,
-          empleado: { select: { nombre: true, apellido: true, cedula: true } },
-          origen: true,
-          destino: true,
-          medidas: true,
-          clienteOrigen: {
-            select: { nombre: true, apellido: true, cedula: true },
-          },
-          clienteDestino: {
-            select: { nombre: true, apellido: true, cedula: true },
+          detalleEnvio: {
+            include: { paquete: true },
           },
         },
       });
+
+      // 2. Actualizar estado de los paquetes
+      await tx.paquete.updateMany({
+        where: { tracking: { in: body.paquetes } },
+        data: { estado: "EN_TRANSITO" },
+      });
+
+      // 3. Calcular costos y crear factura
+      const detallesFactura = await Promise.all(
+        paquetesExistentes.map(async (paquete) => {
+          const costo = calcularCostoEnvio(paquete, body.tipo as 'barco' | 'avion');
+          return {
+            paqueteTracking: paquete.tracking,
+            monto: costo
+          };
+        })
+      );
+
+      const montoTotal = detallesFactura.reduce((sum, detalle) => sum + detalle.monto, 0);
+
+      await tx.factura.create({
+        data: {
+          estado: "GENERADO",
+          monto: montoTotal,
+          metodoPago: "PENDIENTE",
+          cantPiezas: body.paquetes.length,
+          envioNumero: nuevoEnvio.numero,
+          clienteCedula: body.clienteCedula,
+          detalleFactura: {
+            create: detallesFactura
+          }
+        }
+      });
+
+      return nuevoEnvio;
     });
 
+    return NextResponse.json(result, { status: 201 });
+  } catch (error) {
+    console.error("Error creando envío:", error);
     return NextResponse.json(
-      {
-        success: true,
-        data: {
-          ...nuevoPaquete,
-          links: {
-            self: `/api/paquetes/${nuevoPaquete.tracking}`,
-            estado: `/api/paquetes/${nuevoPaquete.tracking}/estado`,
-          },
-        },
-      },
-      { status: 201 }
+      { error: "Error interno del servidor" },
+      { status: 500 }
     );
-  } catch (error: unknown) {
-    console.error("Error POST /api/paquetes:", error);
+  }
+}
 
-    let errorMessage = "Error interno del servidor";
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        errorMessage = "Violación de constraint única";
-      } else if (error.code === "P2003") {
-        errorMessage = "Referencia a clave foránea no encontrada";
-      }
-    } else if (error instanceof Error) {
-      errorMessage = error.message;
+// PATCH: Actualizar envío
+export async function PATCH(req: NextRequest) {
+  try {
+    const { numero, ...data }: { numero: number } & UpdateEnvioBody = await req.json();
+
+    // Validar que el envío existe
+    const envioExistente = await prisma.envio.findUnique({
+      where: { numero },
+      include: { detalleEnvio: true },
+    });
+
+    if (!envioExistente) {
+      return NextResponse.json(
+        { error: "Envío no encontrado" },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json(
-      {
-        success: false,
-        error: errorMessage,
-        details:
-          process.env.NODE_ENV === "development" ? errorMessage : undefined,
+    // Validar datos a actualizar
+    if (data.estado) {
+      const error = validarEstadoEnvio(data.estado);
+      if (error) {
+        return NextResponse.json({ error }, { status: 400 });
+      }
+    }
+
+    if (data.fechaLlegada) {
+      const error = validarFecha(data.fechaLlegada, "fechaLlegada");
+      if (error) {
+        return NextResponse.json({ error }, { status: 400 });
+      }
+    }
+
+    // Actualizar envío
+    const envioActualizado = await prisma.envio.update({
+      where: { numero },
+      data: {
+        estado: data.estado?.toLowerCase(),
+        fechaLlegada: data.fechaLlegada ? new Date(data.fechaLlegada) : undefined,
       },
+    });
+
+    // Si el estado cambió a "en destino", actualizar paquetes
+    if (data.estado?.toLowerCase() === "en destino") {
+      const paquetesIds = envioExistente.detalleEnvio.map(d => d.paqueteTracking);
+      await prisma.paquete.updateMany({
+        where: { tracking: { in: paquetesIds } },
+        data: { estado: "EN_ALMACEN" },
+      });
+    }
+
+    return NextResponse.json(envioActualizado);
+  } catch (error) {
+    console.error("Error actualizando envío:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
       { status: 500 }
     );
   }

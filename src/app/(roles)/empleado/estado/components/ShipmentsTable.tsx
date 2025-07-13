@@ -1,9 +1,36 @@
-"use client"
+"use client";
 import DynamicTable from "@/app/(roles)/(shared)/components/tables/DynamicTable";
 import React from "react";
-import { EditState } from "./EditState";
-import { data, columns } from "../configs";
-export const ShipmentsTable = () => {
+import { useCRUDForm } from "@/app/(roles)/(shared)/hooks/useCRUDForm";
+import { getColumns } from "../configs";
+import { envioEstadoService } from "@/app/services/enviosEstadoService";
 
-    return <DynamicTable data={data} columns={columns} rowsPerPage={2}></DynamicTable>
+export const ShipmentsTable = () => {
+    const id = "cod";
+    const { data, loading, error, updater } = useCRUDForm(envioEstadoService);
+
+    const onChange = async (row: any, nuevoEstado: string) => {
+        const confirmar = window.confirm(
+            `¿Estás seguro de cambiar el estado a "${nuevoEstado}"?`
+        );
+        if (!confirmar) return;
+
+        try {
+            row.estado = nuevoEstado;
+            console.log(row);
+            await envioEstadoService.actualizar(row[id], row);
+            alert("Estado actualizado correctamente.");
+        } catch (err) {
+            alert("Hubo un error al actualizar el estado.");
+            console.error(err);
+            updater();
+        }
+    };
+
+    const columns = getColumns(onChange);
+
+    if (loading) return <p>Cargando...</p>;
+    if (error) return <p>Error al cargar</p>;
+
+    return <DynamicTable data={data} columns={columns} rowsPerPage={2} />;
 };

@@ -62,12 +62,12 @@ export const getColumns: any = (handleCheck: (row: any, checked: boolean) => voi
         key: "seleccionado",
         label: "Seleccionar",
         render: (_: any, row: any) => (
-            <input
-            checked={array.some((item:any) => item[id] === row[id])}
-                type="checkbox"
-                onChange={(e) => handleCheck(row, e.target.checked)}
-            />
-        ),
+  <input
+    checked={Array.isArray(array) && array.some((item: any) => item[id] === row[id])}
+    type="checkbox"
+    onChange={(e) => handleCheck(row, e.target.checked)}
+  />
+),
     },
 ];
 

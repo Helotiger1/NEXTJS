@@ -78,20 +78,6 @@ enum EstadoPaquete {
 }
 
 model Paquete {
-<<<<<<< HEAD
-  tracking        Int      @id @default(autoincrement())
-  descripcion     String
-  estado          EstadoPaquete @default(REGISTRADO)
-  almacenCodigo   Int
-  empleadoCedula  String
-  medidasId       Int      @unique
-  origenId        Int
-  destinoId       Int
-  tipoEnvio       String
-  medidas         Medidas  @relation(fields: [medidasId], references: [id])
-  almacen         Almacen  @relation(fields: [almacenCodigo], references: [codigo])
-  empleado        Usuario  @relation("PaquetesRegistrados", fields: [empleadoCedula], references: [cedula])
-=======
   tracking             Int           @id @default(autoincrement())
   descripcion          String
   estado               EstadoPaquete
@@ -106,7 +92,6 @@ model Paquete {
   medidas  Medidas @relation(fields: [medidasId], references: [id])
   almacen  Almacen @relation(fields: [almacenCodigo], references: [codigo])
   empleado Usuario @relation("PaquetesRegistradosPorEmpleado", fields: [empleadoId], references: [id])
->>>>>>> d73ad264bcb208aa2466ce1f2a88901fdcffe08b
 
   origen  Almacen @relation("PaqueteOrigen", fields: [origenId], references: [codigo])
   destino Almacen @relation("PaqueteDestino", fields: [destinoId], references: [codigo])
@@ -130,28 +115,17 @@ model Medidas {
 }
 
 model Envio {
-<<<<<<< HEAD
-  numero        Int       @id @default(autoincrement())
-  tipoEnvio          String
-  estado        String   @default("EN TRANSITO")
-  fechaSalida   DateTime @default(now())
-  fechaLlegada  DateTime? 
-=======
   numero       Int      @id @default(autoincrement())
   tipo         String
   estado       String
   fechaSalida  DateTime
   fechaLlegada DateTime
->>>>>>> d73ad264bcb208aa2466ce1f2a88901fdcffe08b
 
   almacenOrigen Int @unique
   almacenEnvio  Int @unique
 
   empleadoCedula Int
 
-<<<<<<< HEAD
-  detalleEnvio  DetalleEnvio[]
-=======
   Origen Almacen @relation("OrigenEnvio", fields: [almacenOrigen], references: [codigo])
   Envio  Almacen @relation("DestinoEnvio", fields: [almacenEnvio], references: [codigo])
 
@@ -159,7 +133,6 @@ model Envio {
 
   detalleEnvio DetalleEnvio[]
   facturas     Factura[]
->>>>>>> d73ad264bcb208aa2466ce1f2a88901fdcffe08b
 }
 
 model DetalleEnvio {
@@ -172,18 +145,6 @@ model DetalleEnvio {
 }
 
 model Factura {
-<<<<<<< HEAD
-  numero         Int       @id @default(autoincrement())
-  estado         String    @default("Pendiente")
-  monto          Float
-  metodoPago     String    @default("Desconocido")
-  cantPiezas     Int
-  envioNumero    Int       @unique //esto no va
-  clienteCedula  String
-
-
-  cliente        Usuario   @relation("FacturasCliente", fields: [clienteCedula], references: [cedula])
-=======
   numero        Int    @id @default(autoincrement())
   estado        String
   monto         Float
@@ -194,7 +155,6 @@ model Factura {
 
   envioNum Envio   @relation(fields: [envioNumero], references: [numero])
   cliente  Usuario @relation("FacturasCliente", fields: [clienteCedula], references: [id])
->>>>>>> d73ad264bcb208aa2466ce1f2a88901fdcffe08b
 
   detalleFactura DetalleFactura[]
 }

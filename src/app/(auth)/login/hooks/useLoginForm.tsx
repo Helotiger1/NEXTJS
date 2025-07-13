@@ -1,10 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export function useLoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams(); // <- aquí accedes a los parámetros de la URL
+
+  const tipo = searchParams.get('tipo'); // <- esto te da "empleado", "cliente", etc.
 
   const [form, setForm] = useState({
     email: '',
@@ -18,20 +21,19 @@ export function useLoginForm() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Validación ficticia
     if (!form.email || !form.password) {
       alert('Por favor completa todos los campos');
       return;
     }
 
-    // Simular login correcto
     const user = {
       nombre: 'Juan Pérez',
-      rol: 'cliente',
+      rol: tipo || 'cliente', // ← usa el tipo de la URL como rol
+      id : 1
     };
 
     localStorage.setItem('user', JSON.stringify(user));
-    router.push('/cliente/inicio');
+    router.push(`/${tipo || 'cliente'}/inicio`); // ← redirige al tipo adecuado
   };
 
   return {

@@ -1,14 +1,10 @@
-import React from 'react'
-import { ShipmentsTable } from './components/ShipmentsTable'
-import SearchForTracking from './components/SearchForTracking'
-import DynamicHeader from '../components/DynamicHeader'
+'use client';
 
-export default function page() {
+import { EnviosCliente } from './components/EnviosCliente';
+import ShipmentsTable from './components/ShipmentsTable';
+
+export default function EnviosPage() {
   return (
-    <>
-    <DynamicHeader h1Text="Historial de envios"></DynamicHeader>
-    <SearchForTracking></SearchForTracking>
-    <ShipmentsTable></ShipmentsTable>
-    </>
-  )
+    <EnviosCliente></EnviosCliente>
+  );
 }

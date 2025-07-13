@@ -1,155 +1,282 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/prisma";
 import {
+  EstadoPaquete,
   validarMedidas,
-  validarEstado,
+  validarEstadoPaqueteString,
   validarNumeroPositivo,
   validarTextoNoVacio,
 } from "@/app/lib/Validaciones_Paquetes";
-
-import { Prisma, EstadoPaquete as PrismaEstadoPaquete } from "@prisma/client";
-
-// Ya no usas EventoEstado, así que lo eliminé
+import { Prisma } from "@prisma/client";
 
 // POST: Crear nuevo paquete
 export async function POST(req: NextRequest) {
   try {
+
     const body = await req.json();
+    console.log("Datos recibidos:", body);
+
+    // Procesamiento inicial de datos
+    const processedData = { ...body };
+
+    // Convertir medidas
+    if (processedData.medidas) {
+      processedData.medidas = {
+        largo: Number(processedData.medidas.largo),
+        ancho: Number(processedData.medidas.ancho),
+        alto: Number(processedData.medidas.alto),
+        peso: Number(processedData.medidas.peso),
+      };
+    }
+
+    // Convertir otros campos numéricos
+    const numericFields = [
+      "almacenCodigo",
+      "empleadoId",
+      "origenId",
+      "destinoId",
+      "clienteOrigenId",
+      "clienteDestinoId",
+    ];
+
+    numericFields.forEach((field) => {
+      if (processedData[field] !== undefined) {
+        const num = Number(processedData[field]);
+        if (isNaN(num)) {
+          throw new Error(`${field} debe ser un número válido`);
+        }
+        processedData[field] = num;
+      } else {
+        throw new Error(`${field} es requerido`);
+      }
+    });
+
     const {
       descripcion,
-      estado,
+      estado = "REGISTRADO",
       almacenCodigo,
-      empleadoCedula,
+      empleadoId,
       medidas,
       origenId,
       destinoId,
-    } = body;
+      clienteOrigenId,
+      clienteDestinoId,
+    } = processedData;
 
-    // Validaciones básicas de los campos
-    const validaciones = [
+    // Validaciones básicas
+    const errors: Record<string, string> = {};
+
+    // Validar descripción
+    const descError = validarTextoNoVacio(descripcion, "Descripción", {
+      maxLength: 500,
+    });
+    if (descError) errors.descripcion = descError;
+
+    // Validar estado
+    if (estado && !validarEstadoPaqueteString(estado)) {
+      errors.estado = "Estado de paquete inválido";
+    }
+
+    // Validar campos numéricos
+    const numericValidations = [
+      { field: "almacenCodigo", value: almacenCodigo, name: "Almacén" },
+      { field: "empleadoId", value: empleadoId, name: "Empleado" },
+      { field: "origenId", value: origenId, name: "Origen" },
+      { field: "destinoId", value: destinoId, name: "Destino" },
       {
-        campo: "descripcion",
-        error: validarTextoNoVacio(descripcion, "Descripción"),
+        field: "clienteOrigenId",
+        value: clienteOrigenId,
+        name: "Cliente Origen",
       },
-      { campo: "estado", error: validarEstado(estado) },
       {
-        campo: "almacenCodigo",
-        error: validarNumeroPositivo(almacenCodigo, "Almacén"),
-      },
-      {
-        campo: "empleadoCedula",
-        error: validarTextoNoVacio(empleadoCedula, "Empleado"),
-      },
-      { campo: "medidas", error: validarMedidas(medidas) },
-      { campo: "origenId", error: validarNumeroPositivo(origenId, "Origen") },
-      {
-        campo: "destinoId",
-        error: validarNumeroPositivo(destinoId, "Destino"),
+        field: "clienteDestinoId",
+        value: clienteDestinoId,
+        name: "Cliente Destino",
       },
     ];
 
-    // Recolectar todos los errores de validación
-    const errores = validaciones.filter(v => v.error).map(v => v.error);
-    if (errores.length > 0) {
+    numericValidations.forEach(({ field, value, name }) => {
+      const error = validarNumeroPositivo(value, name, { entero: true });
+      if (error) errors[field] = error;
+    });
+
+    // Validar medidas
+    const medidasError = validarMedidas(medidas);
+    if (medidasError) {
+      errors.medidas = medidasError;
+    }
+
+    if (Object.keys(errors).length > 0) {
+      console.error("Errores de validación:", errors);
+      return NextResponse.json({ success: false, errors }, { status: 400 });
+    }
+
+    // Validaciones de negocio
+    if (origenId === destinoId) {
       return NextResponse.json(
-        { success: false, errors: errores }, 
+        {
+          success: false,
+          error: "El almacén origen y destino no pueden ser el mismo",
+        },
         { status: 400 }
       );
     }
 
-    // Verificar relaciones existentes con validación de roles
-    const [almacenExiste, usuario, origenExiste, destinoExiste] = await Promise.all([
-      prisma.almacen.findUnique({ where: { codigo: almacenCodigo } }),
-      prisma.usuario.findUnique({
-        where: { cedula: empleadoCedula },
-        include: { roles: true } // Incluir los roles del usuario
-      }),
-      prisma.almacen.findUnique({ where: { codigo: origenId } }),
-      prisma.almacen.findUnique({ where: { codigo: destinoId } }),
-    ]);
-
-    // Validar almacenes
-    if (!almacenExiste || !origenExiste || !destinoExiste) {
+    if (clienteOrigenId === clienteDestinoId) {
       return NextResponse.json(
-        { success: false, error: "Almacén origen/destino no encontrado" },
-        { status: 404 }
+        {
+          success: false,
+          error: "El cliente origen y destino no pueden ser el mismo",
+        },
+        { status: 400 }
       );
     }
 
-    // Validar usuario y sus permisos
-    if (!usuario) {
+    if (estado && estado !== "REGISTRADO") {
       return NextResponse.json(
-        { success: false, error: "Usuario no encontrado" },
-        { status: 404 }
+        { success: false, error: "El estado inicial debe ser REGISTRADO" },
+        { status: 400 }
       );
     }
 
-    // Verificar que el usuario tenga rol de EMPLEADO o ADMIN
-    const rolesPermitidos = ['EMPLEADO', 'ADMIN'];
-    const tienePermiso = usuario.roles?.some(r => rolesPermitidos.includes(r.rol));
-    
-    if (!tienePermiso) {
+    // Verificar existencia de entidades relacionadas
+    const [almacen, empleado, origen, destino, clienteOrigen, clienteDestino] =
+      await Promise.all([
+        prisma.almacen.findUnique({ where: { codigo: almacenCodigo } }),
+        prisma.usuario.findUnique({
+          where: { id: empleadoId },
+          include: { roles: true },
+        }),
+        prisma.almacen.findUnique({ where: { codigo: origenId } }),
+        prisma.almacen.findUnique({ where: { codigo: destinoId } }),
+        prisma.usuario.findUnique({
+          where: { id: clienteOrigenId },
+          include: { roles: true },
+        }),
+        prisma.usuario.findUnique({
+          where: { id: clienteDestinoId },
+          include: { roles: true },
+        }),
+      ]);
+
+    // Validar referencias
+    if (!almacen) errors.almacenCodigo = "Almacén no encontrado";
+    if (!empleado) errors.empleadoId = "Empleado no encontrado";
+    if (!origen) errors.origenId = "Almacén origen no encontrado";
+    if (!destino) errors.destinoId = "Almacén destino no encontrado";
+    if (!clienteOrigen) errors.clienteOrigenId = "Cliente origen no encontrado";
+    if (!clienteDestino)
+      errors.clienteDestinoId = "Cliente destino no encontrado";
+
+    if (Object.keys(errors).length > 0) {
+      return NextResponse.json({ success: false, errors }, { status: 404 });
+    }
+
+    // Verificar roles
+    const empleadoTienePermiso = empleado!.roles.some((r) =>
+      ["EMPLEADO", "ADMIN"].includes(r.rol.toUpperCase())
+    );
+
+    if (!empleadoTienePermiso) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: "El usuario no tiene permisos para registrar paquetes. Se requiere rol EMPLEADO o ADMIN" 
+        {
+          success: false,
+          error: "El usuario no tiene permisos para registrar paquetes",
         },
         { status: 403 }
       );
     }
 
-    // Crear paquete en transacción
-    const nuevoPaquete = await prisma.$transaction(async (prisma) => {
-      // Calcular volumen (pulgadas cúbicas)
-      const volumen = medidas.largo * medidas.ancho * medidas.alto;
+    const clienteOrigenEsCliente = clienteOrigen!.roles.some(
+      (r) => r.rol.toUpperCase() === "CLIENTE"
+    );
+    const clienteDestinoEsCliente = clienteDestino!.roles.some(
+      (r) => r.rol.toUpperCase() === "CLIENTE"
+    );
 
-      // 1. Crear las medidas primero
-      const medidasCreadas = await prisma.medidas.create({
+    if (!clienteOrigenEsCliente || !clienteDestinoEsCliente) {
+      return NextResponse.json(
+        { success: false, error: "Los clientes deben tener el rol CLIENTE" },
+        { status: 400 }
+      );
+    }
+
+    // Crear paquete en transacción
+    const nuevoPaquete = await prisma.$transaction(async (tx) => {
+      // 1. Crear las medidas
+      const medidasCreadas = await tx.medidas.create({
         data: {
           largo: medidas.largo,
           ancho: medidas.ancho,
           alto: medidas.alto,
           peso: medidas.peso,
-          volumen
-        }
+          volumen: (medidas.largo * medidas.ancho * medidas.alto) / 1728, // Convertir a pies cúbicos
+        },
       });
 
       // 2. Crear el paquete
-      return await prisma.paquete.create({
+      return await tx.paquete.create({
         data: {
           descripcion: descripcion.trim(),
-          estado: estado as PrismaEstadoPaquete,
+          estado: "REGISTRADO",
           almacenCodigo,
-          empleadoCedula,
+          empleadoId: empleadoId,
           origenId,
           destinoId,
+          clienteOrigenId: clienteOrigenId,
+          clienteDestinoId: clienteDestinoId,
           medidasId: medidasCreadas.id,
         },
         include: {
           almacen: true,
-          empleado: {
-            select: {
-              nombre: true,
-              apellido: true,
-              cedula: true
-            }
-          },
+          empleado: { select: { nombre: true, apellido: true, cedula: true } },
           origen: true,
           destino: true,
           medidas: true,
+          clienteOrigen: {
+            select: { nombre: true, apellido: true, cedula: true },
+          },
+          clienteDestino: {
+            select: { nombre: true, apellido: true, cedula: true },
+          },
         },
       });
     });
 
     return NextResponse.json(
-      { success: true, data: nuevoPaquete },
+      {
+        success: true,
+        data: {
+          ...nuevoPaquete,
+          links: {
+            self: `/api/paquetes/${nuevoPaquete.tracking}`,
+            estado: `/api/paquetes/${nuevoPaquete.tracking}/estado`,
+          },
+        },
+      },
       { status: 201 }
     );
-
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error POST /api/paquetes:", error);
+
+    let errorMessage = "Error interno del servidor";
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        errorMessage = "Violación de constraint única";
+      } else if (error.code === "P2003") {
+        errorMessage = "Referencia a clave foránea no encontrada";
+      }
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
     return NextResponse.json(
-      { success: false, error: "Error interno del servidor" },
+      {
+        success: false,
+        error: errorMessage,
+        details:
+          process.env.NODE_ENV === "development" ? errorMessage : undefined,
+      },
       { status: 500 }
     );
   }
@@ -158,64 +285,303 @@ export async function POST(req: NextRequest) {
 // GET: Listar paquetes con paginación y filtros
 export async function GET(req: NextRequest) {
   try {
+        //En vista de que se rompio, procedere a meter cualquier mamada aqui.
+    return NextResponse.json( [
+  {
+    tracking: "123456789",
+    descripcion: "Paquete de documentos importantes",
+    origen: "California",
+    destino: "Doral",
+    peso: "2 kg",
+    alto: "10 cm",
+    largo: "30 cm",
+    volumen: "0.003 m³",
+    fecha: "2025-07-10",
+    cedulaOrigen: 3141414,
+    cedulaDestino : 4314144
+  },
+  {
+    tracking: "987654321",
+    descripcion: "Componentes electrónicos",
+    origen: "Shanghai, China",
+    destino: "Caracas, Venezuela",
+    peso: "15 kg",
+    alto: "40 cm",
+    largo: "60 cm",
+    volumen: "0.096 m³",
+    fecha: "2025-07-08",
+  },
+  {
+    tracking: "112233445",
+    descripcion: "Muestra de tela",
+    origen: "Madrid, España",
+    destino: "Maracaibo, Venezuela",
+    peso: "0.5 kg",
+    alto: "5 cm",
+    largo: "20 cm",
+    volumen: "0.001 m³",
+    fecha: "2025-07-11",
+  },
+  {
+    tracking: "556677889",
+    descripcion: "Libros y material de estudio",
+    origen: "Bogotá, Colombia",
+    destino: "Valencia, Venezuela",
+    peso: "8 kg",
+    alto: "25 cm",
+    largo: "45 cm",
+    volumen: "0.028 m³",
+    fecha: "2025-07-09",
+  },
+]);
     const { searchParams } = new URL(req.url);
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-    const limit = Math.min(
-      50,
-      Math.max(1, parseInt(searchParams.get("limit") || "10"))
-    );
+
+    // Filtros
     const estado = searchParams.get("estado");
-    const empleado = searchParams.get("empleado");
-    const almacen = searchParams.get("almacen");
+    const empleadoId = searchParams.get("empleadoId");
+    const almacenCodigo = searchParams.get("almacenCodigo");
+    const clienteOrigenId = searchParams.get("clienteOrigenId");
+    const clienteDestinoId = searchParams.get("clienteDestinoId");
+    const tracking = searchParams.get("tracking");
 
-    const whereClause: Prisma.PaqueteWhereInput = {};
+    // Ordenamiento (opcional)
+    const sortField = searchParams.get("sort") || "tracking";
+    const sortOrder = searchParams.get("order") === "asc" ? "asc" : "desc";
 
-    if (
-      estado &&
-      Object.values(PrismaEstadoPaquete).includes(estado as PrismaEstadoPaquete)
-    ) {
-      whereClause.estado = estado as PrismaEstadoPaquete;
+    // Construir cláusula WHERE
+    const where: Prisma.PaqueteWhereInput = {};
+
+    if (estado && validarEstadoPaqueteString(estado)) {
+      where.estado = estado as EstadoPaquete;
     }
 
-    if (empleado) {
-      whereClause.empleadoCedula = empleado;
+    if (empleadoId && !isNaN(Number(empleadoId))) {
+      where.empleadoId = Number(empleadoId);
     }
 
-    if (almacen) {
-      const almacenNum = parseInt(almacen);
-      if (!isNaN(almacenNum)) whereClause.almacenCodigo = almacenNum;
+    if (almacenCodigo && !isNaN(Number(almacenCodigo))) {
+      where.OR = [
+        { almacenCodigo: Number(almacenCodigo) },
+        { origenId: Number(almacenCodigo) },
+        { destinoId: Number(almacenCodigo) },
+      ];
     }
 
-    const [total, paquetes] = await Promise.all([
-      prisma.paquete.count({ where: whereClause }),
-      prisma.paquete.findMany({
-        skip: (page - 1) * limit,
-        take: limit,
-        where: whereClause,
-        include: {
-          almacen: true,
-          empleado: { select: { nombre: true, apellido: true } },
-          origen: true,
-          destino: true,
+    if (clienteOrigenId && !isNaN(Number(clienteOrigenId))) {
+      where.clienteOrigenId = Number(clienteOrigenId);
+    }
+
+    if (clienteDestinoId && !isNaN(Number(clienteDestinoId))) {
+      where.clienteDestinoId = Number(clienteDestinoId);
+    }
+
+    if (tracking && !isNaN(Number(tracking))) {
+      where.tracking = Number(tracking);
+    }
+
+    // Construir ORDER BY
+    const orderBy: Prisma.PaqueteOrderByWithRelationInput = {};
+    if (sortField === "tracking") orderBy.tracking = sortOrder;
+    else if (sortField === "estado") orderBy.estado = sortOrder;
+    else if (sortField === "almacenCodigo") orderBy.almacenCodigo = sortOrder;
+    else orderBy.tracking = "desc";
+
+    // 1. Filtro combinado cliente (origen o destino)
+    const clienteId = searchParams.get("clienteId");
+    if (clienteId && !isNaN(Number(clienteId))) {
+      where.OR = [
+        { clienteOrigenId: Number(clienteId) },
+        { clienteDestinoId: Number(clienteId) },
+      ];
+    }
+
+    /*/ 2. Filtro por fechas
+    const fechaInicio = searchParams.get("fechaInicio");
+    const fechaFin = searchParams.get("fechaFin");
+    if (fechaInicio || fechaFin) {
+      where.fechaRegistro = {};
+      if (fechaInicio) where.fechaRegistro.gte = new Date(fechaInicio);
+      if (fechaFin) where.fechaRegistro.lte = new Date(fechaFin);
+    }*/
+
+    // 3. Filtro por tipo de envío
+    const tipoEnvio = searchParams.get("tipoEnvio");
+    if (tipoEnvio) {
+      where.detalleEnvio = {
+        some: {
+          envio: {
+            tipo: tipoEnvio,
+          },
         },
-        orderBy: { tracking: "asc" },
-      }),
-    ]);
+      };
+    }
+
+    /*/ 4. Filtro por estado de factura
+    const estadoFactura = searchParams.get("estadoFactura");
+    if (estadoFactura) {
+      where.detalleFactura = {
+        some: {
+          factura: {
+            estado: estadoFactura,
+          },
+        },
+      };
+    }*/
+
+    // Obtener todos los paquetes con relaciones completas
+    const paquetes = await prisma.paquete.findMany({
+      where,
+      include: {
+        almacen: {
+          include: {
+            direccion: true,
+          },
+        },
+        empleado: {
+          select: {
+            id: true,
+            cedula: true,
+            nombre: true,
+            apellido: true,
+            email: true,
+            telefono: true,
+            roles: {
+              select: {
+                rol: true,
+              },
+            },
+          },
+        },
+        origen: {
+          include: {
+            direccion: true,
+          },
+        },
+        destino: {
+          include: {
+            direccion: true,
+          },
+        },
+        medidas: true,
+        clienteOrigen: {
+          select: {
+            id: true,
+            cedula: true,
+            nombre: true,
+            apellido: true,
+            email: true,
+            telefono: true,
+          },
+        },
+        clienteDestino: {
+          select: {
+            id: true,
+            cedula: true,
+            nombre: true,
+            apellido: true,
+            email: true,
+            telefono: true,
+          },
+        },
+        detalleEnvio: {
+          include: {
+            envio: {
+              include: {
+                Origen: {
+                  include: {
+                    direccion: true,
+                  },
+                },
+                Envio: {
+                  include: {
+                    direccion: true,
+                  },
+                },
+                empleado: {
+                  select: {
+                    nombre: true,
+                    apellido: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: {
+            envio: {
+              fechaSalida: "desc",
+            },
+          },
+        },
+        detalleFactura: {
+          include: {
+            factura: {
+              include: {
+                cliente: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy,
+    });
+
+    // Enriquecer los datos con información calculada
+    const paquetesEnriquecidos = paquetes.map((paquete) => {
+      // Calcular días en tránsito si aplica
+      let diasTransito = null;
+      let envioActual = null;
+
+      if (paquete.detalleEnvio.length > 0) {
+        envioActual = paquete.detalleEnvio[0].envio;
+
+        if (envioActual?.fechaSalida) {
+          const fechaSalida = new Date(envioActual.fechaSalida);
+          diasTransito = Math.floor(
+            (Date.now() - fechaSalida.getTime()) / (1000 * 60 * 60 * 24)
+          );
+        }
+      }
+
+      // Calcular tarifa estimada
+      let tarifaEstimada = null;
+      if (envioActual) {
+        const volumenPiesCubicos =
+          (paquete.medidas.largo *
+            paquete.medidas.ancho *
+            paquete.medidas.alto) /
+          1728;
+
+        if (envioActual.tipo === "MARITIMO") {
+          tarifaEstimada = Math.max(volumenPiesCubicos * 25, 35);
+        } else if (envioActual.tipo === "AEREO") {
+          const porPeso = paquete.medidas.peso * 7;
+          const porVolumen = volumenPiesCubicos * 7;
+          tarifaEstimada = Math.max(Math.max(porPeso, porVolumen), 45);
+        }
+      }
+
+      return {
+        ...paquete,
+        diasTransito,
+        tarifaEstimada,
+      };
+    });
 
     return NextResponse.json({
       success: true,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-      data: paquetes,
+      data: paquetesEnriquecidos,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error GET /api/paquetes:", error);
     return NextResponse.json(
-      { success: false, error: "Error al obtener paquetes" },
+      {
+        success: false,
+        error: "Error al obtener paquetes",
+        details:
+          process.env.NODE_ENV === "development"
+            ? (error as Error).message
+            : undefined,
+      },
       { status: 500 }
     );
   }

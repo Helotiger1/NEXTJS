@@ -10,8 +10,9 @@ import {
   Plane,
   Boxes,
   Users,
-  Shield,
+  Shield
 } from 'lucide-react';
+
 
 const empleadoSidebar: SidebarConfig = {
   SidebarItems: [
@@ -22,6 +23,7 @@ const empleadoSidebar: SidebarConfig = {
     { href: '/empleado/estado', icon: <Boxes className="h-5 w-5" />, label: 'Estados de envíos' },
     { href: '/empleado/clientes', icon: <Users className="h-5 w-5" />, label: 'Clientes' },
     { href: '/admin/inicio', icon: <Shield className="h-5 w-5" />, label: 'Sección admin' },
+
   ],
   profileURL: '/empleado/perfil',
 };

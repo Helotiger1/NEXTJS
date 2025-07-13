@@ -31,13 +31,15 @@ export const data = [
 ];
 
 
-    export const columns = [
-  { key: "name", label: "Tracking" },
-  { key: "alto", label: "Alto" },
-  { key: "peso", label: "Peso" },
-  { key: "descripcion", label: "Descripción" },
-  { key: "fecha", label: "Fecha" },
-  { key: "origen", label: "Origen" },
-  { key: "destino", label: "Destino" },
-  { key: "estado", label: "Estado" },
+    export const getColumns: any = (
+) => [
+{ key: "tracking", label: "Tracking" },
+    { key: "descripcion", label: "Descripción" },
+    { key: "origen", label: "Origen" },
+    { key: "destino", label: "Destino" },
+    { key: "peso", label: "Peso" },
+    { key: "alto", label: "Alto" },
+    { key: "largo", label: "Largo" },
+    { key: "volumen", label: "Volumen" },
+    { key: "fecha", label: "Fecha" },
 ];

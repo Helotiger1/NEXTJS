@@ -1,15 +1,23 @@
-export type Option = { value: string; label: string };
+export type Option = {
+  value: string | number;
+  label: string;
+};
+
+export type OptionSource =
+  | Option[]
+  | ((context?: any) => Option[] | Promise<Option[]>);
 
 export type Field = {
   name: string;
   label: string;
-  type: "text" | "email" | "select" | "checkbox" | "number";
-  options?: Option[];
+  type: string;
+  options?: OptionSource;
 };
 
-export type DynamicFormProps = {
-  initConfig? : any
+export type DynamicFormProps<TData> = {
+  initConfig?: any;
   config: Field[];
-  onSubmit: (data: Record<string, any>) => void;
+  onSubmit: (data: TData) => void | Promise<void>;
   onCancel?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 };
+

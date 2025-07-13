@@ -1,7 +1,10 @@
+
+"use client";
+
 import { Field } from "../../(shared)/components/forms/types";
 export const formConfig: Field[] = [
     {
-        name: "1",
+        name: "tipoEnvio",
         label: "Tipo de Envio",
         type: "select",
         options: [
@@ -10,31 +13,63 @@ export const formConfig: Field[] = [
         ],
     },
     {
-        name: "2",
+        name: "almacenOrigen",
         label: "Lugar origen",
         type: "select",
-        options: [
-            { value: "Doral", label: "Doral" },
-            { value: "Cliente", label: "California" },
-            { value: "Empleado", label: "La Guaira" },
-            { value: "Doral", label: "Nueva Esparta" },
-        ],
+        options: getAlmacenes
     },
     {
-        name: "6",
+        name: "almacenEnvio",
         label: "Lugar destino",
         type: "select",
-        options: [
-            { value: "Doral", label: "Doral" },
-            { value: "Cliente", label: "California" },
-            { value: "Empleado", label: "La Guaira" },
-            { value: "Doral", label: "Nueva Esparta" },
-        ],
+        options: getAlmacenes
     },
 ];
 
 
 
+import { almacenService } from "@/app/services/almacenService";
+
+type Option = {
+    value: string | number;
+    label: string;
+};
+
+export async function getAlmacenes() {
+    const data = await almacenService.obtenerTodos();
+    return toOptions(data);
+}
+
+export function toOptions(data: any[]): Option[] {
+    return data.map((item) => ({
+        value: item.codigo, // o cualquier identificador único
+        label: `${item.estado} - ${item.ciudad}`,
+    }));
+}
+
+export const getColumns: any = (handleCheck: (row: any, checked: boolean) => void, array: any, id :any ) => [
+  {key: "cedulaDueña", label: "Cedula dueña"},
+    { key: "tracking", label: "Tracking" },
+    { key: "descripcion", label: "Descripción" },
+    { key: "origen", label: "Origen" },
+    { key: "destino", label: "Destino" },
+    { key: "peso", label: "Peso" },
+    { key: "alto", label: "Alto" },
+    { key: "largo", label: "Largo" },
+    { key: "volumen", label: "Volumen" },
+    { key: "fecha", label: "Fecha" },
+    {
+        key: "seleccionado",
+        label: "Seleccionar",
+        render: (_: any, row: any) => (
+  <input
+    checked={Array.isArray(array) && array.some((item: any) => item[id] === row[id])}
+    type="checkbox"
+    onChange={(e) => handleCheck(row, e.target.checked)}
+  />
+),
+    },
+];
 
 
 import React from "react";

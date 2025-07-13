@@ -2,50 +2,76 @@ import { CrudService } from "@/app/services/createCrudService";
 import { useState } from "react";
 
 export default function useCRUD<TData, TResult>(
-  service: CrudService<TData, TResult>,
-  key: keyof TResult,
-  initState: TResult,
-  updater: () => void
+    service: CrudService<TData, TResult>,
+    key: keyof TData,
+    initState: TResult,
+    updater: () => void,
+    checks: boolean
 ) {
-  const [form, setForm] = useState<TResult | null>(null);
+    const [array, setArray] = useState<TData[]>([]);
 
-  const handleAgregar = () => {
-    setForm(initState);
-  };
+    const handleCheck = (row: TData, checked: boolean) => {
+        setArray((prev) => {
+            const exists = prev.some((item) => item[key] === row[key]);
 
-  const handleEdit = (data: TResult) => {
-    console.log(data);
-    setForm(data);
-  };
+            if (checked && !exists) {
+                return [...prev, row];
+            }
 
-  const handleCancel = () => {
-    setForm(null);
-  };
+            if (!checked && exists) {
+                return prev.filter((item) => item[key] !== row[key]);
+            }
 
-  const handleDelete = async (id: string) => {
-    await service.eliminar(id);
-    updater();
-  };
+            return prev;
+        });
+    };
 
-  const handleSubmit = async (data: TResult) => {
-    if (form && form[key]) {
-      await service.actualizar(String(form[key]), data);
-      setForm(null);
-      updater();
-      return;
-    }
+    const [form, setForm] = useState<TResult | null>(null);
 
-    await service.crear(data);
-    setForm(null);
-    updater();
-  };
+    const handleAgregar = () => {
+        setForm(initState);
+    };
 
-  return {
-    form,
-    handleAgregar,
-    handleEdit,
-    handleCancel,
-    handleSubmit,
-    handleDelete,
-  };
+    const handleEdit = (data: TResult) => {
+        setForm(data);
+    };
+
+    const handleCancel = () => {
+        setForm(null);
+    };
+
+    const handleDelete = async (id: string) => {
+        await service.eliminar(id);
+        updater();
+    };
+
+    const handleSubmit = async (data: TResult) => {
+        if (checks){
+          const aux = {...data, array};
+          console.log(aux);
+          service.crear(aux);
+          setArray([]);
+        }
+
+        if (form && form[key]) {
+            await service.actualizar(String(form[key]), data);
+            setForm(null);
+            updater();
+            return;
+        }
+
+        await service.crear(data);
+        setForm(null);
+        updater();
+    };
+
+    return {
+        handleCheck,
+        form,
+        handleAgregar,
+        handleEdit,
+        handleCancel,
+        handleSubmit,
+        handleDelete, array
+    };
 }

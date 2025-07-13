@@ -1,6 +1,7 @@
 "use client";
 import { Field } from "@/app/(roles)/(shared)/components/forms/types";
 import { paquetePayload } from "@/app/services/paqueteService";
+import { getAlmacenes } from "../envios/configs";
 
 export const initState: paquetePayload = {
     cedulaDestino: "",
@@ -13,8 +14,8 @@ export const initState: paquetePayload = {
     alto: "",
     peso: "",
     tipoEnvio: "BARCO",
-    origen: "",
-    destino: "",
+    almacenOrigen: "",
+    almacenDestino: "",
 };
 
 export const formConfig: Field[] = [
@@ -67,23 +68,13 @@ export const formConfig: Field[] = [
         name: "origen",
         label: "Lugar origen",
         type: "select",
-        options: [
-            { value: "Doral", label: "Doral" },
-            { value: "California", label: "California" },
-            { value: "La Guaira", label: "La Guaira" },
-            { value: "Nueva Esparta", label: "Nueva Esparta" },
-        ],
+        options: getAlmacenes
     },
     {
         name: "destino",
         label: "Lugar destino",
         type: "select",
-        options: [
-            { value: "Doral", label: "Doral" },
-            { value: "California", label: "California" },
-            { value: "La Guaira", label: "La Guaira" },
-            { value: "Nueva Esparta", label: "Nueva Esparta" },
-        ],
+        options: getAlmacenes
     },
 ];
 

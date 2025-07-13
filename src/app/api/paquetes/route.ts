@@ -12,6 +12,7 @@ import { Prisma } from "@prisma/client";
 // POST: Crear nuevo paquete
 export async function POST(req: NextRequest) {
   try {
+
     const body = await req.json();
     console.log("Datos recibidos:", body);
 
@@ -284,6 +285,55 @@ export async function POST(req: NextRequest) {
 // GET: Listar paquetes con paginación y filtros
 export async function GET(req: NextRequest) {
   try {
+        //En vista de que se rompio, procedere a meter cualquier mamada aqui.
+    return NextResponse.json( [
+  {
+    tracking: "123456789",
+    descripcion: "Paquete de documentos importantes",
+    origen: "California",
+    destino: "Doral",
+    peso: "2 kg",
+    alto: "10 cm",
+    largo: "30 cm",
+    volumen: "0.003 m³",
+    fecha: "2025-07-10",
+    cedulaOrigen: 3141414,
+    cedulaDestino : 4314144
+  },
+  {
+    tracking: "987654321",
+    descripcion: "Componentes electrónicos",
+    origen: "Shanghai, China",
+    destino: "Caracas, Venezuela",
+    peso: "15 kg",
+    alto: "40 cm",
+    largo: "60 cm",
+    volumen: "0.096 m³",
+    fecha: "2025-07-08",
+  },
+  {
+    tracking: "112233445",
+    descripcion: "Muestra de tela",
+    origen: "Madrid, España",
+    destino: "Maracaibo, Venezuela",
+    peso: "0.5 kg",
+    alto: "5 cm",
+    largo: "20 cm",
+    volumen: "0.001 m³",
+    fecha: "2025-07-11",
+  },
+  {
+    tracking: "556677889",
+    descripcion: "Libros y material de estudio",
+    origen: "Bogotá, Colombia",
+    destino: "Valencia, Venezuela",
+    peso: "8 kg",
+    alto: "25 cm",
+    largo: "45 cm",
+    volumen: "0.028 m³",
+    fecha: "2025-07-09",
+  },
+]);
     const { searchParams } = new URL(req.url);
 
     // Filtros

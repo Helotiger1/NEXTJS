@@ -131,11 +131,7 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      data: almacenes,
-      count: almacenes.length,
-    });
+    return NextResponse.json(almacenes)
   } catch (error) {
     console.error("Error al obtener almacenes:", error);
     return NextResponse.json(

@@ -23,11 +23,7 @@ export function createCrudService<TData, TResult = TData>(
 
     obtenerTodos: () =>
       withErrorHandling(
-        api.get<TData[]>(baseUrl).then(res =>
-          res.data.map(item =>
-            flattenDeepNoPrefix(item as Record<string, any>)
-          ) as TResult[]
-        )
+        api.get<TResult[]>(baseUrl).then(res => res.data)
       ),
 
     actualizar: (id: string, data: TResult) =>
@@ -58,31 +54,4 @@ export function manejarError(error: unknown): never {
     console.error("Error inesperado:", error);
     throw new Error("Error inesperado");
   }
-}
-
-function flattenDeepNoPrefix(obj: any): Record<string, any> {
-  const result: Record<string, any> = {};
-
-  function recurse(current: any) {
-    if (Array.isArray(current)) {
-      for (const item of current) {
-        recurse(item);
-      }
-    } else if (current && typeof current === "object") {
-      for (const key in current) {
-        const value = current[key];
-        if (
-          value &&
-          (typeof value === "object" || Array.isArray(value))
-        ) {
-          recurse(value);
-        } else {
-          result[key] = value;
-        }
-      }
-    }
-  }
-
-  recurse(obj);
-  return result;
 }

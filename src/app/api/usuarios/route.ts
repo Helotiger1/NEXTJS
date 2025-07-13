@@ -168,14 +168,9 @@ export async function GET(req: NextRequest) {
         id: "asc",
       },
     });
-
-    return NextResponse.json({
-      success: true,
-      data: usuarios.map((u) => ({
-        ...u,
-        roles: u.roles.map((r) => r.rol),
-      })),
-    });
+    
+//Esta tambien esta rota de default, solo la comente, y la respuesta deje los usuarios no me sirve de nada lo demas
+    return NextResponse.json(usuarios);
   } catch (error) {
     console.error("Error en GET /api/usuario:", error);
     return NextResponse.json(

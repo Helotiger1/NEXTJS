@@ -1,10 +1,17 @@
-export type Option = { value: string; label: string };
+export type Option = {
+  value: string | number;
+  label: string;
+};
+
+export type OptionSource =
+  | Option[]
+  | ((context?: any) => Option[] | Promise<Option[]>);
 
 export type Field = {
   name: string;
   label: string;
-  type: "text" | "email" | "select" | "checkbox" | "number";
-  options?: Option[];
+  type: string;
+  options?: OptionSource;
 };
 
 export type DynamicFormProps<TData> = {

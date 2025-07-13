@@ -3,8 +3,8 @@ import { createCrudService } from "./createCrudService";
 export interface paquete {
   tracking?: string;
   descripcion: string;
-  origen: string;
-  destino: string;
+  almacenOrigen: string;
+  almacenDestino: string;
   peso: string;
   largo: string
   alto: string;

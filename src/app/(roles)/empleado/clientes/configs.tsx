@@ -1,28 +1,5 @@
- export const data = [
-    {
-      cedula: "12345678",
-      nombre: "Juan",
-      apellido: "Pérez",
-      email: "juan.perez@example.com",
-      telefono: "+58 123 456 7890",
-    },
-    {
-      cedula: "87654321",
-      nombre: "María",
-      apellido: "Gómez",
-      email: "maria.gomez@example.com",
-      telefono: "+58 098 765 4321",
-    },
-    {
-      cedula: "11223344",
-      nombre: "Carlos",
-      apellido: "Ramírez",
-      email: "carlos.ramirez@example.com",
-      telefono: "+58 555 444 3333",
-    },
-  ];
 
- export const columns = [
+ export const getColumns = (setModalInfo: any) => [
     { key: "cedula", label: "Cedula" },
     { key: "nombre", label: "Nombre" },
     { key: "apellido", label: "Apellido" },
@@ -33,7 +10,7 @@
       label: "Ver paquetes",
       render: (_: any, row: any) => (
         <button
-          onClick={() => alert(`Paquetes de ${row.nombre} ${row.apellido}`)}
+          onClick={() => setModalInfo({ tipo: "paquetes", id: row.id })}
           className="text-blue-600 underline"
         >
           Ver paquetes
@@ -45,7 +22,7 @@
       label: "Ver facturas",
       render: (_: any, row: any) => (
         <button
-          onClick={() => alert(`Facturas de ${row.nombre} ${row.apellido}`)}
+          onClick={() => setModalInfo({ tipo: "facturas", id: row.id })}
           className="text-blue-600 underline"
         >
           Ver facturas

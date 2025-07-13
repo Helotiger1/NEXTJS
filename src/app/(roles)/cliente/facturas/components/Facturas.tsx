@@ -4,7 +4,7 @@ import { data, columns } from "./configs";
 import { useServiceId } from "./useServiceId";
 
 export const Facturas = ({id}: {id?: string}) => {
-    const service = "/facturas/"
+    const service = "/facturas?clienteId="
     const { data, loading, error } = useServiceId(service, id);
     if (loading) return <p>Cargando...</p>;
     if (error) return <p>Error al cargar</p>;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/prisma";
-import { Rol } from "@prisma/client";
+import { Prisma, Rol } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { validarUsuario } from "@lib/Validaciones_Usuarios";
 
@@ -112,9 +112,44 @@ export async function POST(req: NextRequest) {
 }
 
 // GET - Obtener usuarios
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const usuarios = await prisma.usuario.findMany(/* {
+    const { searchParams } = new URL(req.url);
+
+    // Obtener parámetros de filtro
+    const rol = searchParams.get("rol");
+    const activo = searchParams.get("activo");
+    const search = searchParams.get("search");
+
+    // Construir objeto WHERE para Prisma
+    const where: Prisma.UsuarioWhereInput = {};
+
+    // Filtro por rol
+    if (rol && Object.values(Rol).includes(rol as Rol)) {
+      where.roles = {
+        some: {
+          rol: rol as Rol,
+        },
+      };
+    }
+
+    // Filtro por estado activo/inactivo
+    if (activo !== null) {
+      where.activo = activo === "true";
+    }
+
+    // Filtro de búsqueda general (cedula, nombre, apellido, email)
+    if (search) {
+      where.OR = [
+        { cedula: { contains: search, mode: "insensitive" } },
+        { nombre: { contains: search, mode: "insensitive" } },
+        { apellido: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    const usuarios = await prisma.usuario.findMany({
+      where,
       select: {
         id: true,
         cedula: true,
@@ -132,7 +167,8 @@ export async function GET() {
       orderBy: {
         id: "asc",
       },
-    } */);
+    });
+    
 //Esta tambien esta rota de default, solo la comente, y la respuesta deje los usuarios no me sirve de nada lo demas
     return NextResponse.json(usuarios);
   } catch (error) {

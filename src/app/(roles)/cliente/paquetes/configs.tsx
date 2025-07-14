@@ -33,13 +33,12 @@ export const data = [
 
     export const getColumns: any = (
 ) => [
-{ key: "tracking", label: "Tracking" },
+    { key: "tracking", label: "Tracking" },
     { key: "descripcion", label: "Descripción" },
-    { key: "origen", label: "Origen" },
-    { key: "destino", label: "Destino" },
-    { key: "peso", label: "Peso" },
-    { key: "alto", label: "Alto" },
-    { key: "largo", label: "Largo" },
-    { key: "volumen", label: "Volumen" },
-    { key: "fecha", label: "Fecha" },
+    { key: "origen.direccion.estado", label: "Origen" },
+    { key: "destino.direccion.estado", label: "Destino" },
+    { key: "medidas.peso", label: "Peso" },
+    { key: "medidas.alto", label: "Alto" },
+    { key: "medidas.largo", label: "Largo" },
+    { key: "medidas.volumen", label: "Volumen" },
 ];

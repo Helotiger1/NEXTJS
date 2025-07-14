@@ -8,6 +8,7 @@ import {
 // POST - Crear nuevo almacén con datos planos
 export async function POST(req: NextRequest) {
   try {
+    
     // Recibir datos planos del cuerpo de la solicitud
     const requestData = await req.json();
 

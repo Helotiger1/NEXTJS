@@ -358,7 +358,7 @@ export async function GET(req: NextRequest) {
     if (sortField === "tracking") orderBy.tracking = sortOrder;
     else if (sortField === "estado") orderBy.estado = sortOrder;
     else if (sortField === "almacenCodigo") orderBy.almacenCodigo = sortOrder;
-    else orderBy.tracking = "desc";
+    else orderBy.tracking = "asc";
 
     // 1. Filtro combinado cliente (origen o destino)
     if (clienteId && !isNaN(Number(clienteId))) {
@@ -481,7 +481,7 @@ export async function GET(req: NextRequest) {
           },
           orderBy: {
             envio: {
-              fechaSalida: "desc",
+              fechaSalida: "asc",
             },
           },
         },
@@ -495,7 +495,7 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      orderBy,
+      //orderBy,
     });
 
     // Enriquecer los datos con información calculada

@@ -1,3 +1,4 @@
+//registrar pago
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/prisma";
 import { validarEstadoFactura, validarMetodoPago } from "@/app/lib/Validaciones_Facturas";

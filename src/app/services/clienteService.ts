@@ -14,5 +14,5 @@ export interface clientes {
 
 
 export const clienteService = createCrudService<clientes>(
-    "/usuario?rol=CLIENTE"
+    "/usuarios?rol=CLIENTE"
 );

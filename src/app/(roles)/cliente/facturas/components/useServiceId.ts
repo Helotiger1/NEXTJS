@@ -20,7 +20,7 @@ export function useServiceId( url:string, initialId?: string) {
     if (!id) return;
 
     setLoading(true);
-    fetch(`${url}${id}`)
+    fetch(`/api/${url}${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Error en la petición");
         return res.json();

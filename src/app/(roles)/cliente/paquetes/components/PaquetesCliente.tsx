@@ -9,6 +9,7 @@ import { useServiceId } from "../../facturas/components/useServiceId";
 export const PaquetesCliente = ({id} : { id?: string}) => {
     const url = "/paquetes?clienteId="
     const { data, loading, error, updater } = useServiceId(url, id);
+    console.log(data)
 
     const columns = getColumns();
 

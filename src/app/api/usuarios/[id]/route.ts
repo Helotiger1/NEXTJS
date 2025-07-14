@@ -50,7 +50,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 // PATCH - Editar usuario
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await req.json()
     const userId = parseInt(params.id)

@@ -12,6 +12,13 @@ export interface CrudService<TData, TResult> {
   eliminar: (id: string) => Promise<void>;
 }
 
+type ApiResponse<T> = {
+  success: boolean;
+  data: T;
+};
+
+
+
 export function createCrudService<TData, TResult = TData>(
   baseUrl: string
 ): CrudService<TData, TResult> {

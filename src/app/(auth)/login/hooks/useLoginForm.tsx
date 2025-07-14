@@ -29,7 +29,7 @@ export function useLoginForm() {
     const user = {
       nombre: 'Juan Pérez',
       rol: tipo || 'cliente', // ← usa el tipo de la URL como rol
-      id : 1
+      id : 2
     };
 
     localStorage.setItem('user', JSON.stringify(user));

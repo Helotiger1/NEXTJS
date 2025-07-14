@@ -5,7 +5,7 @@ import { getColumns } from "../configs";
 import { useServiceId } from "../../facturas/components/useServiceId";
 
 export const EnviosCliente = ({id} : { id?: string}) => {
-    const url = "/envios/"
+    const url = "/envios?clienteId="
     const { data, loading, error, updater } = useServiceId(url, id);
 
     const columns = getColumns();

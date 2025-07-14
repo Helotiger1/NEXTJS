@@ -7,7 +7,7 @@ import { useCRUDForm } from "@/app/(roles)/(shared)/hooks/useCRUDForm";
 import { useServiceId } from "../../facturas/components/useServiceId";
 
 export const PaquetesCliente = ({id} : { id?: string}) => {
-    const url = "/paquetes/"
+    const url = "/paquetes?clienteId="
     const { data, loading, error, updater } = useServiceId(url, id);
 
     const columns = getColumns();

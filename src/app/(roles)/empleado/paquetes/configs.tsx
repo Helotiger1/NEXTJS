@@ -3,29 +3,30 @@ import { Field } from "@/app/(roles)/(shared)/components/forms/types";
 import { paquetePayload } from "@/app/services/paqueteService";
 import { getAlmacenes } from "../envios/configs";
 
-export const initState: paquetePayload = {
-    cedulaDestino: "",
-    cedulaOrigen: "",
-    descripcion: "",
-    fecha: "",
-    cedula: "",
-    largo: "",
-    ancho: "",
-    alto: "",
-    peso: "",
-    tipoEnvio: "BARCO",
-    almacenOrigen: "",
-    almacenDestino: "",
+export const initState = {
+  "cedulaDestino.direccion.estado": "",
+  "cedulaOrigen.direccion.estado": "",
+  "descripcion": "",
+  "fecha": "",
+  "cedula": "",
+  "medidas.largo": "",
+  "ancho": "",
+  "medidas.alto": "",
+  "medidas.peso": "",
+  "tipoEnvio": "BARCO",
+  "almacenOrigen.direccion.estado": "",
+  "almacenDestino.direccion.estado": ""
 };
+
 
 export const formConfig: Field[] = [
     {
-        name: "cedulaOrigen",
-        label: "Cedula del cliente origen",
+        name: "cedulaOrigen.direccion.estado",
+        label: "Cedula del cliente origen.direccion.estado",
         type: "text",
     },
     {
-        name: "cedulaDestino",
+        name: "cedulaDestino.direccion.estado",
         label: "Cedula Destinatario",
         type: "text",
     },
@@ -35,8 +36,8 @@ export const formConfig: Field[] = [
         type: "text",
     },
     {
-        name: "largo",
-        label: "Largo",
+        name: "medidas.largo",
+        label: "medidas.Largo",
         type: "text",
     },
     {
@@ -46,13 +47,13 @@ export const formConfig: Field[] = [
     },
     
     {
-        name: "alto",
-        label: "Alto",
+        name: "medidas.alto",
+        label: "medidas.Alto",
         type: "text",
     },
     {
-        name: "peso",
-        label: "Peso en Libras",
+        name: "medidas.peso",
+        label: "medidas.Peso en Libras",
         type: "text",
     },
     {
@@ -65,14 +66,14 @@ export const formConfig: Field[] = [
         ],
     },
     {
-        name: "origen",
-        label: "Lugar origen",
+        name: "origen.direccion.estado",
+        label: "Lugar origen.direccion.estado",
         type: "select",
         options: getAlmacenes
     },
     {
-        name: "destino",
-        label: "Lugar destino",
+        name: "destino.direccion.estado",
+        label: "Lugar destino.direccion.estado",
         type: "select",
         options: getAlmacenes
     },
@@ -84,13 +85,12 @@ export const getColumns: any = (
 ) => [
     { key: "tracking", label: "Tracking" },
     { key: "descripcion", label: "Descripción" },
-    { key: "origen", label: "Origen" },
-    { key: "destino", label: "Destino" },
-    { key: "peso", label: "Peso" },
-    { key: "alto", label: "Alto" },
-    { key: "largo", label: "Largo" },
-    { key: "volumen", label: "Volumen" },
-    { key: "fecha", label: "Fecha" },
+    { key: "origen.direccion.estado", label: "Origen" },
+    { key: "destino.direccion.estado", label: "Destino" },
+    { key: "medidas.peso", label: "Peso" },
+    { key: "medidas.alto", label: "Alto" },
+    { key: "medidas.largo", label: "Largo" },
+    { key: "medidas.volumen", label: "Volumen" },
     {
         key: "Editar",
         label: "Editar",

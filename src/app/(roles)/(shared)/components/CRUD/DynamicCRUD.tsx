@@ -47,7 +47,7 @@ export default function DynamicCRUD<
 
     if (loading) return <p>Cargando...</p>;
     if (error) return <p>Error al cargar</p>;
-
+    console.log(data);
 
     if (checks) {
         return (

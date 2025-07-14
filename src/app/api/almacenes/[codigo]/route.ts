@@ -59,6 +59,7 @@ export async function PUT(req: NextRequest, { params }: { params: { codigo: stri
   try {
     const codigo = parseInt(params.codigo)
     const requestData = await req.json()
+    console.log(requestData)
 
     if (isNaN(codigo)) {
       return NextResponse.json(

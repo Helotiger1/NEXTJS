@@ -33,7 +33,7 @@ export const formConfig: Field[] = [
         type: "text",
     },
     {
-        name: "rol",
+        name: "roles[0].rol",
         label: "Rol",
         type: "select",
         options: [
@@ -67,7 +67,7 @@ export const getColumns = (
   { key: "apellido", label: "Apellido" },
   { key: "telefono", label: "Teléfono" },
   { key: "email", label: "Correo" },
-  {key: "rol", label: "Rol"},
+  {key: "roles[0].rol", label: "Rol"},
   {
     key: "editar",
     label: "Editar",

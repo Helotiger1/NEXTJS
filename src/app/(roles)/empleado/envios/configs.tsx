@@ -43,7 +43,7 @@ export async function getAlmacenes() {
 export function toOptions(data: any[]): Option[] {
     return data.map((item) => ({
         value: item.codigo, // o cualquier identificador único
-        label: `${item.estado} - ${item.ciudad}`,
+        label: `${item["direccion.pais"]} - ${item["direccion.estado"]}`,
     }));
 }
 

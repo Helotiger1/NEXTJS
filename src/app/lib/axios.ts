@@ -7,35 +7,70 @@ const api = axios.create({
   },
 });
 
-// Tu función flatten
-function flattenDeepNoPrefix(obj: any): Record<string, any> {
+
+export function unflattenWithPrefix(flatObj: Record<string, any>): any {
+  const result: any = {};
+
+  for (const flatKey in flatObj) {
+    const value = flatObj[flatKey];
+
+    const keys = flatKey
+      .replace(/\[(\d+)\]/g, '.$1') 
+      .split('.');
+
+    let current = result;
+
+    keys.forEach((key, index) => {
+      const isLast = index === keys.length - 1;
+      const isArrayIndex = !isNaN(Number(key));
+
+      if (isLast) {
+        current[key] = value;
+      } else {
+        if (!(key in current)) {
+          current[key] = isArrayIndex ? [] : {};
+        }
+        current = current[key];
+      }
+    });
+  }
+
+  return result;
+}
+
+export function flattenDeepWithPrefix(obj: any, prefix = ""): Record<string, any> {
   const result: Record<string, any> = {};
 
-  function recurse(current: any) {
+  function recurse(current: any, currentPrefix: string) {
     if (Array.isArray(current)) {
-      for (const item of current) {
-        recurse(item);
-      }
-    } else if (current && typeof current === "object") {
+      current.forEach((item, index) => {
+        recurse(item, `${currentPrefix}[${index}]`);
+      });
+    } else if (current && typeof current === "object" && !Array.isArray(current)) {
       for (const key in current) {
+        if (!Object.prototype.hasOwnProperty.call(current, key)) continue;
+
         const value = current[key];
-        if (
-          value &&
-          (typeof value === "object" || Array.isArray(value))
-        ) {
-          recurse(value);
+        const newPrefix = currentPrefix ? `${currentPrefix}.${key}` : key;
+
+        if (value !== null && typeof value === "object") {
+          recurse(value, newPrefix);
         } else {
-          result[key] = value;
+          result[newPrefix] = value;
         }
+      }
+    } else {
+      // Si no es objeto ni array, lo asignamos directamente (en caso de raíz no válida)
+      if (currentPrefix) {
+        result[currentPrefix] = current;
       }
     }
   }
 
-  recurse(obj);
+  recurse(obj, prefix);
   return result;
 }
 
-// Interceptor de petición: aplana params de GET/DELETE
 api.interceptors.request.use(
   (config) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -43,10 +78,18 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    const methodsToFlatten = ['get', 'delete'];
     const method = config.method?.toLowerCase();
+
+
+    const methodsToFlatten = ['get', 'delete'];
     if (methodsToFlatten.includes(method || '') && config.params) {
-      config.params = flattenDeepNoPrefix(config.params);
+      config.params = flattenDeepWithPrefix(config.params);
+    }
+
+
+    const methodsToUnflatten = ['post', 'put', 'patch'];
+    if (methodsToUnflatten.includes(method || '') && config.data && typeof config.data === 'object' && !Array.isArray(config.data)) {
+      config.data = unflattenWithPrefix(config.data);
     }
 
     return config;
@@ -54,13 +97,13 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Interceptor de respuesta: aplana cada objeto si response.data es un array
+
 api.interceptors.response.use(
   (response) => {
     if (Array.isArray(response.data)) {
       response.data = response.data.map(item =>
         typeof item === 'object' && item !== null
-          ? flattenDeepNoPrefix(item)
+          ? flattenDeepWithPrefix(item)
           : item
       );
     }

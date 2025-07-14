@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // Desempaquetar datos planos a estructura esperada
+    // Desempaquetar datos planos
     const datosTransformados = {
       cedula: body.cedula,
       nombre: body.nombre,
@@ -16,10 +16,34 @@ export async function POST(req: NextRequest) {
       email: body.email,
       telefono: body.telefono,
       contrasena: body.contrasena,
-      rol: body.rol || Rol.CLIENTE, // Valor por defecto
+      rol: body.rol || Rol.CLIENTE, // Por defecto CLIENTE
     };
 
-    // 1. Validación básica de campos (usar datosTransformados)
+    // Buscar usuario existente por cédula
+    const usuarioExistente = await prisma.usuario.findUnique({
+      where: { cedula: datosTransformados.cedula },
+      include: { roles: true },
+    });
+
+    // Si ya existe, devolver el ID existente
+    if (usuarioExistente) {
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Usuario ya registrado",
+          data: {
+            id: usuarioExistente.id,
+            cedula: usuarioExistente.cedula,
+            nombre: usuarioExistente.nombre,
+            email: usuarioExistente.email,
+            rol: usuarioExistente.roles.map((r) => r.rol),
+          },
+        },
+        { status: 200 }
+      );
+    }
+
+    // Validar campos (solo si no existe)
     const errores = validarUsuario(datosTransformados);
     if (errores.length > 0) {
       return NextResponse.json(
@@ -32,37 +56,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Verificar unicidad (cedula/email)
-    const usuarioExistente = await prisma.usuario.findFirst({
-      where: {
-        OR: [
-          { cedula: datosTransformados.cedula },
-          { email: datosTransformados.email },
-        ],
-      },
+    // Verificar que el email no esté en uso (por otro usuario)
+    const emailEnUso = await prisma.usuario.findUnique({
+      where: { email: datosTransformados.email },
     });
 
-    if (usuarioExistente) {
-      const detallesError = [];
-      if (usuarioExistente.cedula === datosTransformados.cedula)
-        detallesError.push("La cédula ya está registrada");
-      if (usuarioExistente.email === datosTransformados.email)
-        detallesError.push("El email ya está registrado");
-
+    if (emailEnUso) {
       return NextResponse.json(
         {
           success: false,
-          error: "Conflicto de datos",
-          details: detallesError,
+          error: "El email ya está registrado por otro usuario",
         },
         { status: 409 }
       );
     }
 
-    // 3. Hash de contraseña
+    // Hash de la contraseña
     const hashedPassword = await bcrypt.hash(datosTransformados.contrasena, 12);
 
-    // 4. Crear usuario con transacción
+    // Crear nuevo usuario
     const nuevoUsuario = await prisma.$transaction(async (tx) => {
       const usuario = await tx.usuario.create({
         data: {
@@ -85,10 +97,10 @@ export async function POST(req: NextRequest) {
       return usuario;
     });
 
-    // 5. Respuesta exitosa (sin datos sensibles)
     return NextResponse.json(
       {
         success: true,
+        message: "Usuario creado exitosamente",
         data: {
           id: nuevoUsuario.id,
           cedula: nuevoUsuario.cedula,
@@ -114,6 +126,7 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
 
 // GET - Obtener usuarios
 export async function GET(req: NextRequest) {

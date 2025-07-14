@@ -8,7 +8,7 @@ import { formConfig,initState, getColumns } from './configs';
 export const Usuarios = () => {
     return (
         <DynamicCRUD<Usuario>
-            id={'cedula'}
+            id={'id'}
             formConfig={formConfig}
             getColumns={getColumns}
             initState={initState}

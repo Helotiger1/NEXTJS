@@ -540,10 +540,9 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json({
-      success: true,
-      data: paquetesEnriquecidos,
-    });
+    return NextResponse.json(
+paquetesEnriquecidos
+    );
   } catch (error: unknown) {
     console.error("Error GET /api/paquetes:", error);
     return NextResponse.json(

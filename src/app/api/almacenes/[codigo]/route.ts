@@ -55,7 +55,7 @@ export async function GET(req: NextRequest, { params }: { params: { codigo: stri
 }
 
 // PATCH - Actualizar almacén
-export async function PATCH(req: NextRequest, { params }: { params: { codigo: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: { codigo: string } }) {
   try {
     const codigo = parseInt(params.codigo)
     const requestData = await req.json()

@@ -7,7 +7,7 @@ import { validarUsuario } from "@lib/Validaciones_Usuarios";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-
+    console.log(body)
     // Desempaquetar datos planos a estructura esperada
     const datosTransformados = {
       cedula: body.cedula,
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       apellido: body.apellido,
       email: body.email,
       telefono: body.telefono,
-      contrasena: body.contrasena,
+      contrasena: body.contraseña,
       rol: body.rol || Rol.CLIENTE, // Valor por defecto
     };
 
@@ -173,7 +173,6 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    //Esta tambien esta rota de default, solo la comente, y la respuesta deje los usuarios no me sirve de nada lo demas
     return NextResponse.json(usuarios);
   } catch (error) {
     console.error("Error en GET /api/usuario:", error);

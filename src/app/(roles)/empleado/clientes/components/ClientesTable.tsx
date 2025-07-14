@@ -10,13 +10,13 @@ import { clienteService } from "@/app/services/clienteService";
 
 export const ClientesTable = () => {
 
+    
+    const [modalInfo, setModalInfo] = useState({ tipo: null, id: null });
 
     const { data, loading, error } = useCRUDForm(clienteService);
 
     if (loading) return <p>Cargando...</p>;
     if (error) return <p>Error al cargar</p>;
-
-    const [modalInfo, setModalInfo] = useState({ tipo: null, id: null });
 
     const columns = getColumns(setModalInfo);
 
@@ -29,14 +29,14 @@ export const ClientesTable = () => {
                     <PaquetesCliente id={modalInfo.id} />
                 </GenericModal>
             )}
-            ;
+            
             {modalInfo.tipo === "facturas" && modalInfo.id && (
                 <GenericModal
                     onClose={() => setModalInfo({ tipo: null, id: null })}>
                     <Facturas id={modalInfo.id} />
                 </GenericModal>
             )}
-            ;
+            
         </div>
     );
 };

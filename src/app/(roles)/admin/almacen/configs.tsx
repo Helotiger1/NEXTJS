@@ -26,17 +26,17 @@ export const formConfig: Field[] = [
     },
     {
         name: "direccion.pais",
-        label: "direccion.Pais",
+        label: "Pais",
         type: "text",
     },
     {
         name: "direccion.estado",
-        label: "direccion.Estado",
+        label: "Estado",
         type: "text",
     },
     {
         name: "direccion.ciudad",
-        label: "direccion.Ciudad",
+        label: "Ciudad",
         type: "text",
     },
     {

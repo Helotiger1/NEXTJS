@@ -12,6 +12,7 @@ export default function DynamicForm<TData>({
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData) as TData;
+    console.log(data);
     onSubmit(data);
   };
 

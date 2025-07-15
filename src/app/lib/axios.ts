@@ -7,36 +7,80 @@ const api = axios.create({
   },
 });
 
+export function deepUnflatten(input: any): any {
+  const isFlatKey = (key: string) => key.includes(".") || key.includes("[");
 
-export function unflattenWithPrefix(flatObj: Record<string, any>): any {
-  const result: any = {};
+  const unflatten = (flatObj: Record<string, any>): any => {
+    const result: any = {};
 
-  for (const flatKey in flatObj) {
-    const value = flatObj[flatKey];
+    for (const flatKey in flatObj) {
+      const value = flatObj[flatKey];
+      const keys = flatKey.replace(/\[(\d+)\]/g, ".$1").split(".");
+      let current = result;
 
-    const keys = flatKey
-      .replace(/\[(\d+)\]/g, '.$1') 
-      .split('.');
+      keys.forEach((key, i) => {
+        const isLast = i === keys.length - 1;
+        const nextKey = keys[i + 1];
+        const nextIsArrayIndex = /^\d+$/.test(nextKey);
 
-    let current = result;
+        // Convierte key numérico a número
+        const keyIsArrayIndex = /^\d+$/.test(key);
+        const keyIndex = keyIsArrayIndex ? Number(key) : null;
 
-    keys.forEach((key, index) => {
-      const isLast = index === keys.length - 1;
-      const isArrayIndex = !isNaN(Number(key));
-
-      if (isLast) {
-        current[key] = value;
-      } else {
-        if (!(key in current)) {
-          current[key] = isArrayIndex ? [] : {};
+        if (isLast) {
+          if (keyIsArrayIndex) {
+            if (!Array.isArray(current)) current = [];
+            current[keyIndex!] = value;
+          } else {
+            current[key] = value;
+          }
+        } else {
+          if (keyIsArrayIndex) {
+            if (!Array.isArray(current)) {
+              // Forzar array si no es
+              current = [];
+            }
+            if (current[keyIndex!] === undefined) {
+              current[keyIndex!] = nextIsArrayIndex ? [] : {};
+            }
+            current = current[keyIndex!];
+          } else {
+            if (!(key in current)) {
+              current[key] = nextIsArrayIndex ? [] : {};
+            }
+            current = current[key];
+          }
         }
-        current = current[key];
-      }
-    });
-  }
+      });
+    }
 
-  return result;
+    return result;
+  };
+
+  const traverse = (obj: any): any => {
+    if (Array.isArray(obj)) {
+      return obj.map(traverse);
+    }
+
+    if (typeof obj !== "object" || obj === null) {
+      return obj;
+    }
+
+    const hasFlatKeys = Object.keys(obj).some(isFlatKey);
+    const processed = hasFlatKeys ? unflatten(obj) : obj;
+
+    const result: any = {};
+    for (const key in processed) {
+      result[key] = traverse(processed[key]);
+    }
+
+    return result;
+  };
+
+  return traverse(input);
 }
+
+
 
 export function flattenDeepWithPrefix(obj: any, prefix = ""): Record<string, any> {
   const result: Record<string, any> = {};
@@ -89,7 +133,7 @@ api.interceptors.request.use(
 
     const methodsToUnflatten = ['post', 'put', 'patch'];
     if (methodsToUnflatten.includes(method || '') && config.data && typeof config.data === 'object' && !Array.isArray(config.data)) {
-      config.data = unflattenWithPrefix(config.data);
+      config.data = deepUnflatten(config.data);
     }
 
     return config;

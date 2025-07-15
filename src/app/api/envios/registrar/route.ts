@@ -92,25 +92,10 @@ interface UpdateEnvioBody {
 // POST: Crear un nuevo envío
 export async function POST(req: NextRequest) {
   try {
-    const body: CreateEnvioBody = await req.json();
+    const body: EnvioBody = await req.json();
 
-    // Validar campos obligatorios y tipos básicos
-    const camposObligatorios: (keyof CreateEnvioBody)[] = [
-      'tipo', 'estado', 'fechaSalida', 'fechaLlegada',
-      'almacenOrigen', 'almacenEnvio', 'clienteCedula', 'empleadoId', 'paquetes'
-    ];
-
-    for (const campo of camposObligatorios) {
-      if (body[campo] === undefined || body[campo] === null) {
-        return NextResponse.json({ error: `El campo '${campo}' es obligatorio.` }, { status: 400 });
-      }
-      if (typeof body[campo] === 'string' && (body[campo] as string).trim() === '') {
-        return NextResponse.json({ error: `El campo '${campo}' no puede estar vacío.` }, { status: 400 });
-      }
-    }
-
-    // Validar formato y lógica de los campos
-    const erroresValidacion: string[] = [
+    // Validaciones básicas
+    const errores = [
       validarTipoEnvio(body.tipo),
       validarEstadoEnvio(body.estado),
       validarFecha(body.fechaSalida, "fechaSalida"),
@@ -357,21 +342,304 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json(envioActualizado);
   } catch (error: unknown) {
     console.error("Error actualizando envío:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
+      { status: 500 }
+    );
+  }
+}
 
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2002') { // Violación de restricción única
-        return NextResponse.json(
-          { error: `Conflicto de datos: ${error.meta?.target || 'Registro duplicado'}. Asegúrate de que los valores de almacén de origen/destino no estén ya en uso por otro envío (si son únicos).` },
-          { status: 409 }
-        );
-      }
-      if (error.code === 'P2003') { // Error de clave foránea
-        return NextResponse.json(
-          { error: "Error de datos relacionados. Asegúrate de que los almacenes o el empleado existen." },
-          { status: 400 }
-        );
-      }
+// GET: Listar paquetes con paginación y filtros
+export async function GET(req: NextRequest) {
+  try {
+        //En vista de que se rompio, procedere a meter cualquier mamada aqui.
+    return NextResponse.json( [
+  {
+    tracking: "123456789",
+    descripcion: "Paquete de documentos importantes",
+    origen: "California",
+    destino: "Doral",
+    peso: "2 kg",
+    alto: "10 cm",
+    largo: "30 cm",
+    volumen: "0.003 m³",
+    fecha: "2025-07-10",
+    cedulaOrigen: 3141414,
+    cedulaDestino : 4314144
+  },
+  {
+    tracking: "987654321",
+    descripcion: "Componentes electrónicos",
+    origen: "Shanghai, China",
+    destino: "Caracas, Venezuela",
+    peso: "15 kg",
+    alto: "40 cm",
+    largo: "60 cm",
+    volumen: "0.096 m³",
+    fecha: "2025-07-08",
+  },
+  {
+    tracking: "112233445",
+    descripcion: "Muestra de tela",
+    origen: "Madrid, España",
+    destino: "Maracaibo, Venezuela",
+    peso: "0.5 kg",
+    alto: "5 cm",
+    largo: "20 cm",
+    volumen: "0.001 m³",
+    fecha: "2025-07-11",
+  },
+  {
+    tracking: "556677889",
+    descripcion: "Libros y material de estudio",
+    origen: "Bogotá, Colombia",
+    destino: "Valencia, Venezuela",
+    peso: "8 kg",
+    alto: "25 cm",
+    largo: "45 cm",
+    volumen: "0.028 m³",
+    fecha: "2025-07-09",
+  },
+]);
+    const { searchParams } = new URL(req.url);
+
+    // Filtros
+    const estado = searchParams.get("estado");
+    const empleadoId = searchParams.get("empleadoId");
+    const almacenCodigo = searchParams.get("almacenCodigo");
+    const clienteOrigenId = searchParams.get("clienteOrigenId");
+    const clienteDestinoId = searchParams.get("clienteDestinoId");
+    const tracking = searchParams.get("tracking");
+
+    // Ordenamiento (opcional)
+    const sortField = searchParams.get("sort") || "tracking";
+    const sortOrder = searchParams.get("order") === "asc" ? "asc" : "desc";
+
+    // Construir cláusula WHERE
+    const where: Prisma.PaqueteWhereInput = {};
+
+    if (estado && validarEstadoPaqueteString(estado)) {
+      where.estado = estado as EstadoPaquete;
     }
+
+    if (empleadoId && !isNaN(Number(empleadoId))) {
+      where.empleadoId = Number(empleadoId);
+    }
+
+    if (almacenCodigo && !isNaN(Number(almacenCodigo))) {
+      where.OR = [
+        { almacenCodigo: Number(almacenCodigo) },
+        { origenId: Number(almacenCodigo) },
+        { destinoId: Number(almacenCodigo) },
+      ];
+    }
+
+    if (clienteOrigenId && !isNaN(Number(clienteOrigenId))) {
+      where.clienteOrigenId = Number(clienteOrigenId);
+    }
+
+    if (clienteDestinoId && !isNaN(Number(clienteDestinoId))) {
+      where.clienteDestinoId = Number(clienteDestinoId);
+    }
+
+    if (tracking && !isNaN(Number(tracking))) {
+      where.tracking = Number(tracking);
+    }
+
+    // Construir ORDER BY
+    const orderBy: Prisma.PaqueteOrderByWithRelationInput = {};
+    if (sortField === "tracking") orderBy.tracking = sortOrder;
+    else if (sortField === "estado") orderBy.estado = sortOrder;
+    else if (sortField === "almacenCodigo") orderBy.almacenCodigo = sortOrder;
+    else orderBy.tracking = "desc";
+
+    // 1. Filtro combinado cliente (origen o destino)
+    const clienteId = searchParams.get("clienteId");
+    if (clienteId && !isNaN(Number(clienteId))) {
+      where.OR = [
+        { clienteOrigenId: Number(clienteId) },
+        { clienteDestinoId: Number(clienteId) },
+      ];
+    }
+
+    /*/ 2. Filtro por fechas
+    const fechaInicio = searchParams.get("fechaInicio");
+    const fechaFin = searchParams.get("fechaFin");
+    if (fechaInicio || fechaFin) {
+      where.fechaRegistro = {};
+      if (fechaInicio) where.fechaRegistro.gte = new Date(fechaInicio);
+      if (fechaFin) where.fechaRegistro.lte = new Date(fechaFin);
+    }*/
+
+    // 3. Filtro por tipo de envío
+    const tipoEnvio = searchParams.get("tipoEnvio");
+    if (tipoEnvio) {
+      where.detalleEnvio = {
+        some: {
+          envio: {
+            tipo: tipoEnvio,
+          },
+        },
+      };
+    }
+
+    /*/ 4. Filtro por estado de factura
+    const estadoFactura = searchParams.get("estadoFactura");
+    if (estadoFactura) {
+      where.detalleFactura = {
+        some: {
+          factura: {
+            estado: estadoFactura,
+          },
+        },
+      };
+    }*/
+
+    // Obtener todos los paquetes con relaciones completas
+    const paquetes = await prisma.paquete.findMany({
+      where,
+      include: {
+        almacen: {
+          include: {
+            direccion: true,
+          },
+        },
+        empleado: {
+          select: {
+            id: true,
+            cedula: true,
+            nombre: true,
+            apellido: true,
+            email: true,
+            telefono: true,
+            roles: {
+              select: {
+                rol: true,
+              },
+            },
+          },
+        },
+        origen: {
+          include: {
+            direccion: true,
+          },
+        },
+        destino: {
+          include: {
+            direccion: true,
+          },
+        },
+        medidas: true,
+        clienteOrigen: {
+          select: {
+            id: true,
+            cedula: true,
+            nombre: true,
+            apellido: true,
+            email: true,
+            telefono: true,
+          },
+        },
+        clienteDestino: {
+          select: {
+            id: true,
+            cedula: true,
+            nombre: true,
+            apellido: true,
+            email: true,
+            telefono: true,
+          },
+        },
+        detalleEnvio: {
+          include: {
+            envio: {
+              include: {
+                Origen: {
+                  include: {
+                    direccion: true,
+                  },
+                },
+                Envio: {
+                  include: {
+                    direccion: true,
+                  },
+                },
+                empleado: {
+                  select: {
+                    nombre: true,
+                    apellido: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: {
+            envio: {
+              fechaSalida: "desc",
+            },
+          },
+        },
+        detalleFactura: {
+          include: {
+            factura: {
+              include: {
+                cliente: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy,
+    });
+
+    // Enriquecer los datos con información calculada
+    const paquetesEnriquecidos = paquetes.map((paquete) => {
+      // Calcular días en tránsito si aplica
+      let diasTransito = null;
+      let envioActual = null;
+
+      if (paquete.detalleEnvio.length > 0) {
+        envioActual = paquete.detalleEnvio[0].envio;
+
+        if (envioActual?.fechaSalida) {
+          const fechaSalida = new Date(envioActual.fechaSalida);
+          diasTransito = Math.floor(
+            (Date.now() - fechaSalida.getTime()) / (1000 * 60 * 60 * 24)
+          );
+        }
+      }
+
+      // Calcular tarifa estimada
+      let tarifaEstimada = null;
+      if (envioActual) {
+        const volumenPiesCubicos =
+          (paquete.medidas.largo *
+            paquete.medidas.ancho *
+            paquete.medidas.alto) /
+          1728;
+
+        if (envioActual.tipo === "MARITIMO") {
+          tarifaEstimada = Math.max(volumenPiesCubicos * 25, 35);
+        } else if (envioActual.tipo === "AEREO") {
+          const porPeso = paquete.medidas.peso * 7;
+          const porVolumen = volumenPiesCubicos * 7;
+          tarifaEstimada = Math.max(Math.max(porPeso, porVolumen), 45);
+        }
+      }
+
+      return {
+        ...paquete,
+        diasTransito,
+        tarifaEstimada,
+      };
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: paquetesEnriquecidos,
+    });
+  } catch (error: unknown) {
+    console.error("Error GET /api/paquetes:", error);
     return NextResponse.json(
       { error: "Error interno del servidor al actualizar el envío." },
       { status: 500 }

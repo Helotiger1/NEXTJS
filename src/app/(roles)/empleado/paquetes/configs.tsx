@@ -21,12 +21,12 @@ export const initState = {
 
 export const formConfig: Field[] = [
     {
-        name: "cedulaOrigen.direccion.estado",
-        label: "Cedula del cliente origen.direccion.estado",
+        name: "clienteOrigen.cedula",
+        label: "Cedula del cliente",
         type: "text",
     },
     {
-        name: "cedulaDestino.direccion.estado",
+        name: "clienteDestino.cedula",
         label: "Cedula Destinatario",
         type: "text",
     },
@@ -37,23 +37,23 @@ export const formConfig: Field[] = [
     },
     {
         name: "medidas.largo",
-        label: "medidas.Largo",
+        label: "Largo",
         type: "text",
     },
     {
-        name: "ancho",
+        name: "medidas.ancho",
         label: "Ancho",
         type: "text",
     },
     
     {
         name: "medidas.alto",
-        label: "medidas.Alto",
+        label: "Alto",
         type: "text",
     },
     {
         name: "medidas.peso",
-        label: "medidas.Peso en Libras",
+        label: "Peso en libras",
         type: "text",
     },
     {
@@ -67,13 +67,13 @@ export const formConfig: Field[] = [
     },
     {
         name: "origen.direccion.estado",
-        label: "Lugar origen.direccion.estado",
+        label: "Lugar origen",
         type: "select",
         options: getAlmacenes
     },
     {
         name: "destino.direccion.estado",
-        label: "Lugar destino.direccion.estado",
+        label: "Lugar destino",
         type: "select",
         options: getAlmacenes
     },

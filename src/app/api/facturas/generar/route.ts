@@ -73,25 +73,22 @@ export async function POST(req: NextRequest) {
 
     const facturaGenerada = generarFactura(paquetesParaFactura);
 
-    // Desempaquetar datos para Prisma
-    const datosFactura = {
-      estado: "pendiente",
-      monto: facturaGenerada.total,
-      metodoPago: "pendiente",
-      cantPiezas: paquetesFiltrados.length,
-      envioNumero,
-      clienteCedula,
-      detalleFactura: {
-        create: facturaGenerada.items.map((item) => ({
-          paqueteTracking: item.tracking,
-          monto: item.monto, // si quieres guardar el monto por paquete
-        })),
-      },
-    };
-
-    // Crear la factura en BD
+    // Crear factura
     const nuevaFactura = await prisma.factura.create({
-      data: datosFactura,
+      data: {
+        estado: "pendiente",
+        monto: facturaGenerada.total,
+        metodoPago: "pendiente",
+        cantPiezas: paquetesFiltrados.length,
+        envioNumero,
+        clienteCedula,
+        detalleFactura: {
+          create: facturaGenerada.items.map((item) => ({
+            paqueteTracking: item.tracking,
+            monto: item.monto,
+          })),
+        },
+      },
       include: { detalleFactura: true },
     });
 

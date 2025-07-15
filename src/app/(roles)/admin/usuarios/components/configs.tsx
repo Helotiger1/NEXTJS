@@ -28,12 +28,12 @@ export const formConfig: Field[] = [
         type: "email",
     },
     {
-        name: "contraseña",
+        name: "contrasena",
         label: "Contraseña",
-        type: "text",
+        type: "password",
     },
     {
-        name: "roles[0].rol",
+        name: "rol",
         label: "Rol",
         type: "select",
         options: [

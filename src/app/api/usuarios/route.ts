@@ -7,7 +7,8 @@ import { validarUsuario } from "@lib/Validaciones_Usuarios";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    console.log(body)
+    console.log(body);
+    
     // Desempaquetar datos planos
     const datosTransformados = {
       cedula: body.cedula,
@@ -19,31 +20,7 @@ export async function POST(req: NextRequest) {
       rol: body.rol || Rol.CLIENTE, // Valor por defecto
     };
 
-    // Buscar usuario existente por cédula
-    const usuarioExistente = await prisma.usuario.findUnique({
-      where: { cedula: datosTransformados.cedula },
-      include: { roles: true },
-    });
-
-    // Si ya existe, devolver el ID existente
-    if (usuarioExistente) {
-      return NextResponse.json(
-        {
-          success: true,
-          message: "Usuario ya registrado",
-          data: {
-            id: usuarioExistente.id,
-            cedula: usuarioExistente.cedula,
-            nombre: usuarioExistente.nombre,
-            email: usuarioExistente.email,
-            rol: usuarioExistente.roles.map((r) => r.rol),
-          },
-        },
-        { status: 200 }
-      );
-    }
-
-    // Validar campos (solo si no existe)
+    // Validar campos primero (antes de verificar existencia)
     const errores = validarUsuario(datosTransformados);
     if (errores.length > 0) {
       return NextResponse.json(
@@ -56,18 +33,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verificar que el email no esté en uso (por otro usuario)
-    const emailEnUso = await prisma.usuario.findUnique({
-      where: { email: datosTransformados.email },
+    // Verificar existencia (cédula o email) en una sola consulta
+    const usuarioExistente = await prisma.usuario.findFirst({
+      where: {
+        OR: [
+          { cedula: datosTransformados.cedula },
+          { email: datosTransformados.email }
+        ]
+      },
+      include: { roles: true }
     });
 
-    if (emailEnUso) {
+    if (usuarioExistente) {
+      // Determinar qué campo causó el conflicto
+      const conflicto = usuarioExistente.cedula === datosTransformados.cedula 
+        ? "cedula" 
+        : "email";
+      
       return NextResponse.json(
         {
           success: false,
-          error: "El email ya está registrado por otro usuario",
+          error: `${conflicto} ya está registrado`,
+          data: {
+            id: usuarioExistente.id,
+            [conflicto]: usuarioExistente[conflicto]
+          }
         },
-        { status: 409 }
+        { status: 409 } // 409 para indicar conflicto
       );
     }
 

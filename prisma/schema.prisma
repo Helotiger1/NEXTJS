@@ -138,7 +138,7 @@ model Envio {
   empleado Usuario @relation("EnviosRealizados", fields: [empleadoCedula], references: [id])
 
   detalleEnvio DetalleEnvio[]
-  facturas     Factura[]
+  facturas     Factura?
 }
 
 model DetalleEnvio {
@@ -156,7 +156,7 @@ model Factura {
   monto         Float
   metodoPago    String
   cantPiezas    Int
-  envioNumero   Int    @unique
+  envioNumero   Int   @unique
   clienteCedula Int
 
   envioNum Envio   @relation(fields: [envioNumero], references: [numero])

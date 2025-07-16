@@ -1,29 +1,28 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { usuarioService } from "@/app/services/usuarioService";
 
 export function useRegisterForm() {
   const router = useRouter();
 
   const [form, setForm] = useState({
-    name: "",
+    cedula: "",
+    nombre: "",
+    apellido: "",
     email: "",
-    password: "",
-    confirm: "",
+    telefono:"",
+   contrasena: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (form.password !== form.confirm) {
-      alert("Las contraseñas no coinciden.");
-      return;
-    }
-
-    // Aquí iría el fetch a la API o lógica para registrar
+    await usuarioService.crear(form);
+    alert("Usuario registrado exitosamente!")
     router.push("/login");
   };
 

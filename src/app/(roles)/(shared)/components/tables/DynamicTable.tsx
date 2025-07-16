@@ -13,7 +13,7 @@ export default function DynamicTable<T extends object>({
     children,
     idName = "codigo",
 }: DynamicTableProps<T>) {
-    const [filtro, setFiltro] = useState(idName);
+    const [filtro, setFiltro] = useState(columns[0].key);
     const [busqueda, setBusqueda] = useState('');
 
     const [page, setPage] = useState(0);

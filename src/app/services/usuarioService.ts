@@ -7,8 +7,8 @@ export interface Usuario {
   cedula: string;
   telefono: string;
   email: string;
-  contraseña: string;
-  rol: "ADMIN" | "USUARIO" | "CLIENTE";
+  contrasena: string;
+  rol?: "ADMIN" | "USUARIO" | "CLIENTE";
 }
 
 export const usuarioService = createCrudService<Usuario>("/usuarios");

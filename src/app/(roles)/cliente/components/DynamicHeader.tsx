@@ -14,7 +14,7 @@ export default function DynamicHeader({
   onChange: (e: any) => void;
   onChangeFilter: (e: any) => void;
   columns: any;
-  filtro: string;
+  filtro: any;
 }) {
   const columnasVisibles = columns.filter((col : any) => !col.render);
 
@@ -27,7 +27,7 @@ export default function DynamicHeader({
           <input
             onChange={onChange}
             type="text"
-            placeholder="🔍 Buscar por tracking..."
+            placeholder="🔍 Buscar"
             className="border border-gray-300 focus:border-purple-600 focus:ring-purple-600 rounded-lg px-4 py-2 w-full md:w-1/3 shadow-sm transition-all text-gray-700"
           />
 

@@ -9,7 +9,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     console.log(body);
 
-    // Desempaquetar datos planos
     const datosTransformados = {
       cedula: body.cedula,
       nombre: body.nombre,

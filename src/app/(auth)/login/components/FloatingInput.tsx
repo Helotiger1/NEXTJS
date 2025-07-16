@@ -22,7 +22,7 @@ export default function FloatingInput({
   />
   <label
     htmlFor={name}
-    className="absolute left-1 top-2 text-gray-400 text-sm transition-all duration-200 ease-in-out peer-placeholder-shown:top-6 peer-placeholder-shown:text-base peer-placeholder-shown:top-[22px] peer-focus:top-[4px] peer-focus:text-xs peer-focus:text-purple-400 pointer-events-none"
+    className="absolute left-1 top-0 text-gray-400 text-sm transition-all duration-200 ease-in-out  peer-placeholder-shown:text-base  peer-focus:top-[4px] peer-focus:text-xs peer-focus:text-purple-400 pointer-events-none"
   >
     {label}
   </label>

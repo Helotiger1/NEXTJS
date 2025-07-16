@@ -22,7 +22,7 @@ export const RegisterForm = ({
                         </h2>
 
                         <FloatingInput
-                            name="name"
+                            name="nombre"
                             label="Nombre"
                             value={form.nombre}
                             onChange={onChange}
@@ -58,18 +58,10 @@ export const RegisterForm = ({
                         />
 
                         <FloatingInput
-                            name="password"
+                            name="contrasena"
                             label="Contraseña"
                             type="password"
                             value={form.contra}
-                            onChange={onChange}
-                        />
-
-                        <FloatingInput
-                            name="confirm"
-                            label="Confirmar contraseña"
-                            type="password"
-                            value={form.contraconfirm}
                             onChange={onChange}
                         />
 

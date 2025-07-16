@@ -4,32 +4,35 @@ import prisma from "@/app/lib/prisma";
 
 export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const clienteId = searchParams.get("clienteId");
+
+    let whereClause = {};
+
+    if (clienteId) {
+      whereClause = {
+        clienteCedula: parseInt(clienteId),
+      };
+    }
+
     const facturas = await prisma.factura.findMany({
+      where: whereClause,
       include: {
         cliente: true,
         envioNum: true,
         detalleFactura: {
           include: {
             paquete: {
-              include: {
-                medidas: true,
-              },
+              include: { medidas: true },
             },
           },
         },
       },
-      orderBy: {
-        numero: "desc",
-      },
-      take: 50, // opcional, limitar a 50 facturas
     });
 
     return NextResponse.json({ success: true, facturas }, { status: 200 });
   } catch (error) {
-    console.error("Error al listar facturas:", error);
-    return NextResponse.json(
-      { success: false, error: "Error interno del servidor" },
-      { status: 500 }
-    );
+    console.error("Error al obtener facturas:", error);
+    return NextResponse.json({ success: false, error: "Error interno" }, { status: 500 });
   }
 }

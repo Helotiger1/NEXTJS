@@ -1,5 +1,35 @@
 import { NextResponse } from "next/server";
 
 export function GET() {
-    return NextResponse.json({ message: "EDUARDO MAMAME LAS BOLAS" });
+    const response = {
+        art: `
+        ███╗   ███╗ █████╗ ███╗   ███╗ █████╗ ██╗      ██████╗ 
+        ████╗ ████║██╔══██╗████╗ ████║██╔══██╗██║     ██╔═══██╗
+        ██╔████╔██║███████║██╔████╔██║███████║██║     ██║   ██║
+        ██║╚██╔╝██║██╔══██║██║╚██╔╝██║██╔══██║██║     ██║   ██║
+        ██║ ╚═╝ ██║██║  ██║██║ ╚═╝ ██║██║  ██║███████╗╚██████╔╝
+        ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝ ╚═════╝ 
+
+        ███████╗██████╗ ██╗   ██╗ █████╗ ██████╗ ██████╗  ██████╗ 
+        ██╔════╝██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔══██╗██╔═══██╗
+        █████╗  ██║  ██║██║   ██║███████║██████╔╝██║  ██║██║   ██║
+        ██╔══╝  ██║  ██║╚██╗ ██╔╝██╔══██║██╔══██╗██║  ██║██║   ██║
+        ███████╗██████╔╝ ╚████╔╝ ██║  ██║██║  ██║██████╔╝╚██████╔╝
+        ╚══════╝╚═════╝   ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝╚═════╝ 
+        `.trim(),
+        message: "MAMALO EDUARDO",
+        meta: {
+            format: "ASCII Art",
+            creator: "Eduardo",
+            generatedAt: new Date().toISOString()
+        }
+    };
+
+    return new NextResponse(JSON.stringify(response), {
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Art-Type': 'ASCII-RAW'
+        },
+        status: 200
+    });
 }

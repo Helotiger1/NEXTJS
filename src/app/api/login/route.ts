@@ -1,60 +1,79 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs'; 
+import prisma from '@/app/lib/prisma';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'bece484c8b3add2cfd95c566191cd5daae402865f5654821332d84a8a1e5a928';
+const JWT_SECRET = process.env.JWT_SECRET || 'bece484c8b3add2cfd95c566191cd5daae402865f5654821332d84a8a1e5a928'; // Clave rara
 
 export async function POST(req: NextRequest) {
   try {
-    const { cedula, contraseña } = await req.json();
+    // Extraer email y contraseña del cuerpo de la solicitud
+    const { email, contraseña } = await req.json();
 
-    if (!cedula || !contraseña) {
-      return NextResponse.json({ error: 'Faltan credenciales' }, { status: 400 });
+    // Validar que se proporcionen ambas credenciales
+    if (!email || !contraseña) {
+      return NextResponse.json({ error: 'Faltan credenciales: email y contraseña son obligatorias.' }, { status: 400 });
     }
 
-    // Buscar usuario por cédula
-    const usuario = await prisma.cliente.findUnique({
-      where: { cedula },
+    // Buscar usuario por email en el modelo 'Usuario'
+    const usuario = await prisma.usuario.findUnique({
+      where: { email }, // Buscar por email
+      include: { // Incluir la relación 'roles'
+        roles: {
+          select: { // Seleccionar solo el campo 'rol' de la tabla intermedia UsuarioRol
+            rol: true
+          }
+        }
+      }
     });
 
+    // Verificar si el usuario existe
     if (!usuario) {
-      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
+      return NextResponse.json({ error: 'Credenciales inválidas: Usuario no encontrado o email incorrecto.' }, { status: 401 });
     }
-    
-    /*
-      Validar contraseña:
-      Si la contraseña está guardada sin hash, compara directamente (usuario.contraseña !== contraseña).
-      Si está hasheada (recomendado), usa bcrypt.compare como se hace aquí.
-      Ambos métodos son válidos, pero aquí se utiliza bcrypt para mayor seguridad.
 
-      De todas formas queda pendiente esto a ver cual se usa por facilidad de uso y seguridad.
-    */
-    const validPassword = await bcrypt.compare(contraseña, usuario.contraseña);
+    // Verificar si el usuario está activo
+    if (!usuario.activo) {
+      return NextResponse.json({ error: 'Su cuenta está inactiva. Por favor, contacte al administrador.' }, { status: 403 });
+    }
+
+    // Comparar la contraseña proporcionada con la hasheada en la base de datos
+    const validPassword = await bcrypt.compare(contraseña, usuario.contrasena);
     if (!validPassword) {
-      return NextResponse.json({ error: 'Contraseña incorrecta' }, { status: 401 });
+      return NextResponse.json({ error: 'Credenciales inválidas: Contraseña incorrecta.' }, { status: 401 });
     }
-    
 
-    // Generar JWT con la cédula como payload
-    const token = jwt.sign({ cedula: usuario.cedula }, JWT_SECRET, {
-      expiresIn: '1h',
-    });
+    // Generar JWT con el ID, cédula, email y roles del usuario como payload
+    const token = jwt.sign(
+      { userId: usuario.id, cedula: usuario.cedula, email: usuario.email, roles: usuario.roles },
+      JWT_SECRET,
+      { expiresIn: '1h' } // El token expirará en 1 hora
+    );
 
-    // Respuesta exitosa con token y datos básicos de usuario
+    // Respuesta exitosa con el token y datos básicos del usuario
     return NextResponse.json({
       token,
       usuario: {
+        id: usuario.id,
         cedula: usuario.cedula,
         nombre: usuario.nombre,
         apellido: usuario.apellido,
         email: usuario.email,
+        telefono: usuario.telefono,
       },
+      mensaje: 'Inicio de sesión exitoso.'
     }, { status: 200 });
 
-  } catch (error) {
-    console.error('Error en login:', error);
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+  } catch (error: unknown) { // Captura el error con tipo 'unknown'
+    console.error('Error en login:', error); // Log del error para depuración
+
+    // Manejo específico de errores si es una instancia de Error
+    return NextResponse.json(
+      {
+        error: 'Error interno del servidor al intentar iniciar sesión.',
+        details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined, // Muestra detalles solo en desarrollo
+      },
+      { status: 500 }
+    );
   }
 }

@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     // Filtrar los paquetes que vienen en el body para generar la factura
     const paquetesFiltrados = envio.detalleEnvio
       .map((d) => d.paquete)
-      .filter((p) => paquetes.includes(p.tracking));
+      .filter((p) => paquetes.includes(p.tracking.toString()));
 
     if (paquetesFiltrados.length === 0) {
       return NextResponse.json(
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
 
     const facturaGenerada = generarFactura(paquetesParaFactura);
 
-    // Crear factura
+    // 1. Crear la factura sin detalles
     const nuevaFactura = await prisma.factura.create({
       data: {
         estado: "pendiente",
@@ -82,18 +82,27 @@ export async function POST(req: NextRequest) {
         cantPiezas: paquetesFiltrados.length,
         envioNumero,
         clienteCedula,
-        detalleFactura: {
-          create: facturaGenerada.items.map((item) => ({
-            paqueteTracking: item.tracking,
-            monto: item.monto,
-          })),
-        },
       },
+    });
+
+    // 2. Crear los detalles usando el número de factura recién creado
+    for (const item of facturaGenerada.items) {
+      await prisma.detalleFactura.create({
+        data: {
+          facturaNumero: nuevaFactura.numero,
+          paqueteTracking: item.tracking,
+        },
+      });
+    }
+
+    // 3. Opcional: traer la factura con detalles para devolverla
+    const facturaConDetalles = await prisma.factura.findUnique({
+      where: { numero: nuevaFactura.numero },
       include: { detalleFactura: true },
     });
 
     return NextResponse.json(
-      { success: true, factura: nuevaFactura },
+      { success: true, factura: facturaConDetalles },
       { status: 201 }
     );
   } catch (error) {

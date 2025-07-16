@@ -2,10 +2,7 @@
 import DynamicTable from "@/app/(roles)/(shared)/components/tables/DynamicTable";
 import React from "react";
 import { getColumns } from "../configs";
-import { paqueteService } from "@/app/services/paqueteService";
-import { useCRUDForm } from "@/app/(roles)/(shared)/hooks/useCRUDForm";
 import { useServiceId } from "../../facturas/components/useServiceId";
-import { flattenDeepWithPrefix } from "@/app/lib/axios";
     const url = "/paquetes?clienteId="
 
 export const PaquetesCliente = ({id} : { id?: string}) => {
@@ -20,6 +17,6 @@ export const PaquetesCliente = ({id} : { id?: string}) => {
 
 
     
-    return <DynamicTable data={data} name="Historial de Paquetes"columns={columns} rowsPerPage={4}></DynamicTable>
+    return <DynamicTable  idName="tracking" data={data} name="Historial de Paquetes"columns={columns} rowsPerPage={4}></DynamicTable>
 
 };

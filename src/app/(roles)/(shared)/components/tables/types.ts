@@ -12,4 +12,5 @@ export type DynamicTableProps<T> = {
   data: T[];
   rowsPerPage?: number;
   children?: ReactNode
+  idName?: string
 };

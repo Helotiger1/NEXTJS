@@ -22,7 +22,7 @@ export const ClientesTable = () => {
 
     return (
         <div>
-            <DynamicTable  name={'Clientes'} data={data} columns={columns} rowsPerPage={2} />
+            <DynamicTable idName="cedula" name={'Clientes'} data={data} columns={columns} rowsPerPage={2} />
             {modalInfo.tipo === "paquetes" && modalInfo.id && (
                 <GenericModal
                     onClose={() => setModalInfo({ tipo: null, id: null })}>

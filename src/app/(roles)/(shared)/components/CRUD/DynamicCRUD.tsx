@@ -55,7 +55,7 @@ export default function DynamicCRUD<
     if (checks) {
         return (
             <>
-                <DynamicTable
+                <DynamicTable idName={id}
                     name={h1Name}
                     columns={columns}
                     data={data}></DynamicTable>
@@ -69,7 +69,7 @@ export default function DynamicCRUD<
     if (form == null) {
         return (
             <>
-                <DynamicTable
+                <DynamicTable idName={id}
                     name={h1Name}
                     columns={columns}
                     data={data}

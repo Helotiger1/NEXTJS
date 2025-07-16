@@ -12,6 +12,6 @@ export const EnviosCliente = ({id} : { id?: string}) => {
 
     if (loading) return <p>Cargando...</p>;
     if (error) return <p>Error al cargar</p>;
-    return <DynamicTable name="Historial de Envíos" data={data} columns={columns} rowsPerPage={4}></DynamicTable>
+    return <DynamicTable idName="tracking" name="Historial de Envíos" data={data} columns={columns} rowsPerPage={4}></DynamicTable>
 
 };

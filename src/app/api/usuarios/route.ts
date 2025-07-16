@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     console.log(body);
-    
+
     // Desempaquetar datos planos
     const datosTransformados = {
       cedula: body.cedula,
@@ -38,26 +38,27 @@ export async function POST(req: NextRequest) {
       where: {
         OR: [
           { cedula: datosTransformados.cedula },
-          { email: datosTransformados.email }
-        ]
+          { email: datosTransformados.email },
+        ],
       },
-      include: { roles: true }
+      include: { roles: true },
     });
 
     if (usuarioExistente) {
       // Determinar qué campo causó el conflicto
-      const conflicto = usuarioExistente.cedula === datosTransformados.cedula 
-        ? "cedula" 
-        : "email";
-      
+      const conflicto =
+        usuarioExistente.cedula === datosTransformados.cedula
+          ? "cedula"
+          : "email";
+
       return NextResponse.json(
         {
           success: false,
           error: `${conflicto} ya está registrado`,
           data: {
             id: usuarioExistente.id,
-            [conflicto]: usuarioExistente[conflicto]
-          }
+            [conflicto]: usuarioExistente[conflicto],
+          },
         },
         { status: 409 } // 409 para indicar conflicto
       );
@@ -119,8 +120,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-
-// GET - Obtener usuarios
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -147,7 +146,7 @@ export async function GET(req: NextRequest) {
       where.activo = activo === "true";
     }
 
-    // Filtro de búsqueda general (cedula, nombre, apellido, email)
+    // Filtro de búsqueda general
     if (search) {
       where.OR = [
         { cedula: { contains: search, mode: "insensitive" } },
@@ -178,7 +177,18 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(usuarios);
+    // Transformar los resultados para devolver el rol como string
+    const usuariosTransformados = usuarios.map((usuario) => ({
+      ...usuario,
+      rol: usuario.roles[0]?.rol || null, // Tomamos el primer rol o null si no hay roles
+    }));
+
+    // Eliminamos el array roles del objeto final
+    const resultadoFinal = usuariosTransformados.map(
+      ({ roles, ...usuario }) => usuario
+    );
+
+    return NextResponse.json(resultadoFinal);
   } catch (error) {
     console.error("Error en GET /api/usuario:", error);
     return NextResponse.json(

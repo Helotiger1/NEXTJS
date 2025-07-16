@@ -65,7 +65,7 @@ export const getColumns = (
   { key: "apellido", label: "Apellido" },
   { key: "telefono", label: "Teléfono" },
   { key: "email", label: "Correo" },
-  {key: "roles[0].rol", label: "Rol"},
+  {key: "rol", label: "Rol"},
   {
     key: "editar",
     label: "Editar",

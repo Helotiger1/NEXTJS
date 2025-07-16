@@ -29,6 +29,7 @@ export const formConfig: Field[] = [
 
 
 import { almacenService } from "@/app/services/almacenService";
+import { clienteService } from "@/app/services/clienteService";
 
 type Option = {
     value: string | number;
@@ -42,10 +43,26 @@ export async function getAlmacenes() {
 
 export function toOptions(data: any[]): Option[] {
     return data.map((item) => ({
-        value: item.codigo, // o cualquier identificador único
+        value: item.codigo,
         label: `${item["direccion.pais"]} - ${item["direccion.estado"]}`,
     }));
 }
+
+
+export async function getClientes() {
+    const data = await clienteService.obtenerTodos();
+    return toOptionsClientes(data);
+}
+
+export function toOptionsClientes(data: any[]): Option[] {
+    return data.map((item) => ({
+        value: item.id, 
+        label: `${item["nombre"]}}`,
+    }));
+}
+
+
+
 
 export const getColumns: any = (handleCheck: (row: any, checked: boolean) => void, array: any, id :any ) => [
     { key: "tracking", label: "Tracking" },

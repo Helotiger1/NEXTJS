@@ -1,34 +1,35 @@
 "use client";
 import { Field } from "@/app/(roles)/(shared)/components/forms/types";
 import { paquetePayload } from "@/app/services/paqueteService";
-import { getAlmacenes } from "../envios/configs";
+import { getAlmacenes, getClientes } from "../envios/configs";
 
 export const initState = {
-  "cedulaDestino.direccion.estado": "",
-  "cedulaOrigen.direccion.estado": "",
-  "descripcion": "",
-  "fecha": "",
-  "cedula": "",
-  "medidas.largo": "",
-  "ancho": "",
-  "medidas.alto": "",
-  "medidas.peso": "",
-  "tipoEnvio": "BARCO",
-  "almacenOrigen.direccion.estado": "",
-  "almacenDestino.direccion.estado": ""
+    "cedulaDestino.direccion.estado": "",
+    "cedulaOrigen.direccion.estado": "",
+    descripcion: "",
+    fecha: "",
+    cedula: "",
+    "medidas.largo": "",
+    ancho: "",
+    "medidas.alto": "",
+    "medidas.peso": "",
+    tipoEnvio: "BARCO",
+    "almacenOrigen.direccion.estado": "",
+    "almacenDestino.direccion.estado": "",
 };
-
 
 export const formConfig: Field[] = [
     {
-        name: "clienteOrigen.cedula",
-        label: "Cedula del cliente Origen",
-        type: "text",
+        name: "clienteOrigenId",
+        label: "Cliente origen",
+        type: "select",
+        options: getClientes,
     },
     {
-        name: "clienteDestino.cedula",
-        label: "Cedula del cliente Destino",
-        type: "text",
+        name: "clienteDestinoId",
+        label: "Cliente destino",
+        type: "select",
+        options: getClientes,
     },
     {
         name: "descripcion",
@@ -45,7 +46,7 @@ export const formConfig: Field[] = [
         label: "Ancho",
         type: "text",
     },
-    
+
     {
         name: "medidas.alto",
         label: "Alto",
@@ -69,13 +70,13 @@ export const formConfig: Field[] = [
         name: "origenId",
         label: "Lugar origen",
         type: "select",
-        options: getAlmacenes
+        options: getAlmacenes,
     },
     {
         name: "destinoId",
         label: "Lugar destino",
         type: "select",
-        options: getAlmacenes
+        options: getAlmacenes,
     },
 ];
 

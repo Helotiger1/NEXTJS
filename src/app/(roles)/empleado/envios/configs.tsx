@@ -44,7 +44,7 @@ export async function getAlmacenes() {
 export function toOptions(data: any[]): Option[] {
     return data.map((item) => ({
         value: item.codigo,
-        label: `${item["direccion.pais"]} - ${item["direccion.estado"]}`,
+        label: `${item["direccion.pais"]} - ${item["direccion.estado"]} ID ${item["direccion.id"]}`,
     }));
 }
 
@@ -57,7 +57,7 @@ export async function getClientes() {
 export function toOptionsClientes(data: any[]): Option[] {
     return data.map((item) => ({
         value: item.id, 
-        label: `${item["nombre"]}}`,
+        label: `${item["cedula"]} - ${item["nombre"]} ${item["apellido"]}`,
     }));
 }
 

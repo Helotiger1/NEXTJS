@@ -4,7 +4,6 @@ import {
   EstadoPaquete,
   validarMedidas,
   validarEstadoPaqueteString,
-  validarNumeroPositivo,
   validarTextoNoVacio,
 } from "@/app/lib/Validaciones_Paquetes";
 import { Prisma } from "@prisma/client";
@@ -15,201 +14,124 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     console.log("Datos recibidos:", body);
 
-    // Desempaquetar datos planos
     const {
       descripcion,
       estado = "REGISTRADO",
-      almacenCodigo,
-      empleadoId,
       origenId,
       destinoId,
       clienteOrigenId,
       clienteDestinoId,
-      largo,
-      ancho,
-      alto,
-      peso,
+      medidas = {},
+      tipoEnvio,
     } = body;
 
-    // Convertir medidas a número
-    const medidas = {
+    const empleadoId = 3;
+    const almacenCodigo = origenId;
+
+    const { 
+      largo = "0", 
+      ancho = "0", 
+      alto = "0", 
+      peso = "0" 
+    } = medidas;
+
+    const medidasNumericas = {
       largo: Number(largo),
       ancho: Number(ancho),
       alto: Number(alto),
       peso: Number(peso),
     };
 
-    // Validar que sean números válidos
-    if (
-      [medidas.largo, medidas.ancho, medidas.alto, medidas.peso].some((v) =>
-        isNaN(v)
-      )
-    ) {
+    if (Object.values(medidasNumericas).some(isNaN)) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Todas las medidas (largo, ancho, alto, peso) deben ser numéricas",
+        { 
+          success: false, 
+          error: "Todas las medidas deben ser valores numéricos válidos",
+          details: { medidasRecibidas: medidas, medidasConvertidas: medidasNumericas }
         },
         { status: 400 }
       );
     }
 
-    // Validar campos numéricos requeridos
-    const numericFields = [
-      "almacenCodigo",
-      "empleadoId",
-      "origenId",
-      "destinoId",
-      "clienteOrigenId",
-      "clienteDestinoId",
-    ];
-
     const processedData = {
       descripcion,
       estado,
       almacenCodigo: Number(almacenCodigo),
-      empleadoId: Number(empleadoId),
+      empleadoId,
       origenId: Number(origenId),
       destinoId: Number(destinoId),
       clienteOrigenId: Number(clienteOrigenId),
       clienteDestinoId: Number(clienteDestinoId),
     };
 
-    numericFields.forEach((field) => {
-      const value = processedData[field as keyof typeof processedData];
-      if (value === undefined || isNaN(value)) {
-        throw new Error(`${field} debe ser un número válido`);
-      }
-    });
-
-    const {
-      descripcion: desc,
-      estado: estadoFinal,
-      almacenCodigo: almacenCod,
-      empleadoId: empId,
-      origenId: origId,
-      destinoId: destId,
-      clienteOrigenId: cliOrigId,
-      clienteDestinoId: cliDestId,
-    } = processedData;
-
-    // Validaciones básicas
     const errors: Record<string, string> = {};
 
-    const descError = validarTextoNoVacio(desc, "Descripción", {
-      maxLength: 500,
-    });
+    const descError = validarTextoNoVacio(descripcion, "Descripción", { maxLength: 500 });
     if (descError) errors.descripcion = descError;
 
-    if (estadoFinal && !validarEstadoPaqueteString(estadoFinal)) {
+    if (estado && !validarEstadoPaqueteString(estado)) {
       errors.estado = "Estado de paquete inválido";
     }
 
-    const numericValidations = [
-      { field: "almacenCodigo", value: almacenCod, name: "Almacén" },
-      { field: "empleadoId", value: empId, name: "Empleado" },
-      { field: "origenId", value: origId, name: "Origen" },
-      { field: "destinoId", value: destId, name: "Destino" },
-      { field: "clienteOrigenId", value: cliOrigId, name: "Cliente Origen" },
-      { field: "clienteDestinoId", value: cliDestId, name: "Cliente Destino" },
-    ];
+    if (!["BARCO", "AVION"].includes(tipoEnvio)) {
+      errors.tipoEnvio = "Tipo de envío inválido. Debe ser 'BARCO' o 'AVION'";
+    }
 
-    numericValidations.forEach(({ field, value, name }) => {
-      const error = validarNumeroPositivo(value, name, { entero: true });
-      if (error) errors[field] = error;
+    ["origenId", "destinoId", "clienteOrigenId", "clienteDestinoId"].forEach(field => {
+      if (isNaN(processedData[field as keyof typeof processedData])) {
+        errors[field] = `${field} debe ser un número válido`;
+      }
     });
 
-    const medidasError = validarMedidas(medidas);
-    if (medidasError) {
-      errors.medidas = medidasError;
+    const medidasError = validarMedidas(medidasNumericas);
+    if (medidasError) errors.medidas = medidasError;
+
+    if (processedData.origenId === processedData.destinoId) {
+      errors.origenId = "El almacén origen y destino no pueden ser el mismo";
+    }
+
+    if (processedData.clienteOrigenId === processedData.clienteDestinoId) {
+      errors.clienteOrigenId = "El cliente origen y destino no pueden ser el mismo";
+    }
+
+    if (estado !== "REGISTRADO") {
+      errors.estado = "El estado inicial debe ser REGISTRADO";
     }
 
     if (Object.keys(errors).length > 0) {
-      console.error("Errores de validación:", errors);
       return NextResponse.json({ success: false, errors }, { status: 400 });
     }
 
-    // Validaciones de negocio
-    if (origId === destId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "El almacén origen y destino no pueden ser el mismo",
-        },
-        { status: 400 }
-      );
-    }
-
-    if (cliOrigId === cliDestId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "El cliente origen y destino no pueden ser el mismo",
-        },
-        { status: 400 }
-      );
-    }
-
-    if (estadoFinal && estadoFinal !== "REGISTRADO") {
-      return NextResponse.json(
-        { success: false, error: "El estado inicial debe ser REGISTRADO" },
-        { status: 400 }
-      );
-    }
-
-    // Verificar existencia de entidades relacionadas
-    const [almacen, empleado, origen, destino, clienteOrigen, clienteDestino] =
-      await Promise.all([
-        prisma.almacen.findUnique({ where: { codigo: almacenCod } }),
-        prisma.usuario.findUnique({
-          where: { id: empId },
-          include: { roles: true },
-        }),
-        prisma.almacen.findUnique({ where: { codigo: origId } }),
-        prisma.almacen.findUnique({ where: { codigo: destId } }),
-        prisma.usuario.findUnique({
-          where: { id: cliOrigId },
-          include: { roles: true },
-        }),
-        prisma.usuario.findUnique({
-          where: { id: cliDestId },
-          include: { roles: true },
-        }),
-      ]);
+    const [almacen, empleado, origen, destino, clienteOrigen, clienteDestino] = await Promise.all([
+      prisma.almacen.findUnique({ where: { codigo: processedData.almacenCodigo } }),
+      prisma.usuario.findUnique({ where: { id: empleadoId }, include: { roles: true } }),
+      prisma.almacen.findUnique({ where: { codigo: processedData.origenId } }),
+      prisma.almacen.findUnique({ where: { codigo: processedData.destinoId } }),
+      prisma.usuario.findUnique({ where: { id: processedData.clienteOrigenId }, include: { roles: true } }),
+      prisma.usuario.findUnique({ where: { id: processedData.clienteDestinoId }, include: { roles: true } }),
+    ]);
 
     if (!almacen) errors.almacenCodigo = "Almacén no encontrado";
     if (!empleado) errors.empleadoId = "Empleado no encontrado";
     if (!origen) errors.origenId = "Almacén origen no encontrado";
     if (!destino) errors.destinoId = "Almacén destino no encontrado";
     if (!clienteOrigen) errors.clienteOrigenId = "Cliente origen no encontrado";
-    if (!clienteDestino)
-      errors.clienteDestinoId = "Cliente destino no encontrado";
+    if (!clienteDestino) errors.clienteDestinoId = "Cliente destino no encontrado";
 
     if (Object.keys(errors).length > 0) {
       return NextResponse.json({ success: false, errors }, { status: 404 });
     }
 
-    const empleadoTienePermiso = empleado!.roles.some((r) =>
-      ["EMPLEADO", "ADMIN"].includes(r.rol.toUpperCase())
-    );
-
+    const empleadoTienePermiso = empleado?.roles?.some(r => ["EMPLEADO", "ADMIN"].includes(r.rol.toUpperCase())) ?? false;
     if (!empleadoTienePermiso) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "El usuario no tiene permisos para registrar paquetes",
-        },
+        { success: false, error: "El usuario no tiene permisos para registrar paquetes" },
         { status: 403 }
       );
     }
 
-    const clienteOrigenEsCliente = clienteOrigen!.roles.some(
-      (r) => r.rol.toUpperCase() === "CLIENTE"
-    );
-    const clienteDestinoEsCliente = clienteDestino!.roles.some(
-      (r) => r.rol.toUpperCase() === "CLIENTE"
-    );
-
+    const clienteOrigenEsCliente = clienteOrigen?.roles?.some(r => r.rol.toUpperCase() === "CLIENTE") ?? false;
+    const clienteDestinoEsCliente = clienteDestino?.roles?.some(r => r.rol.toUpperCase() === "CLIENTE") ?? false;
     if (!clienteOrigenEsCliente || !clienteDestinoEsCliente) {
       return NextResponse.json(
         { success: false, error: "Los clientes deben tener el rol CLIENTE" },
@@ -217,29 +139,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Crear paquete en transacción
     const nuevoPaquete = await prisma.$transaction(async (tx) => {
       const medidasCreadas = await tx.medidas.create({
         data: {
-          largo: medidas.largo,
-          ancho: medidas.ancho,
-          alto: medidas.alto,
-          peso: medidas.peso,
-          volumen: (medidas.largo * medidas.ancho * medidas.alto) / 1728,
+          ...medidasNumericas,
+          volumen: parseFloat(
+            (medidasNumericas.largo * medidasNumericas.ancho * medidasNumericas.alto / 1728).toFixed(2)
+          ),
         },
       });
 
       return await tx.paquete.create({
         data: {
-          descripcion: desc.trim(),
+          descripcion: descripcion.trim(),
           estado: "REGISTRADO",
-          almacenCodigo: almacenCod,
-          empleadoId: empId,
-          origenId: origId,
-          destinoId: destId,
-          clienteOrigenId: cliOrigId,
-          clienteDestinoId: cliDestId,
+          almacenCodigo: processedData.almacenCodigo,
+          empleadoId,
+          origenId: processedData.origenId,
+          destinoId: processedData.destinoId,
+          clienteOrigenId: processedData.clienteOrigenId,
+          clienteDestinoId: processedData.clienteDestinoId,
           medidasId: medidasCreadas.id,
+          tipoEnvio: tipoEnvio,
         },
         include: {
           almacen: true,
@@ -247,12 +168,8 @@ export async function POST(req: NextRequest) {
           origen: true,
           destino: true,
           medidas: true,
-          clienteOrigen: {
-            select: { nombre: true, apellido: true, cedula: true },
-          },
-          clienteDestino: {
-            select: { nombre: true, apellido: true, cedula: true },
-          },
+          clienteOrigen: { select: { nombre: true, apellido: true, cedula: true } },
+          clienteDestino: { select: { nombre: true, apellido: true, cedula: true } },
         },
       });
     });
@@ -288,14 +205,12 @@ export async function POST(req: NextRequest) {
       {
         success: false,
         error: errorMessage,
-        details:
-          process.env.NODE_ENV === "development" ? errorMessage : undefined,
+        details: process.env.NODE_ENV === "development" ? errorMessage : undefined,
       },
       { status: 500 }
     );
   }
 }
-
 
 // GET: Listar paquetes con paginación y filtros
 export async function GET(req: NextRequest) {
@@ -389,17 +304,15 @@ export async function GET(req: NextRequest) {
       };
     }
 
-    /*/ 4. Filtro por estado de factura
+    // 4. Filtro por estado de factura
     const estadoFactura = searchParams.get("estadoFactura");
     if (estadoFactura) {
       where.detalleFactura = {
-        some: {
-          factura: {
-            estado: estadoFactura,
-          },
+        factura: {
+          estado: estadoFactura,
         },
       };
-    }*/
+    }
 
     // Obtener todos los paquetes con relaciones completas
     const paquetes = await prisma.paquete.findMany({

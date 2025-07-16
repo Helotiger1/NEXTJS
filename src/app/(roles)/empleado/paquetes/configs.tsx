@@ -50,21 +50,21 @@ export const formConfig: Field[] = [
     },
     {
         name: "medidas.largo",
-        label: "Largo (cm)",
+        label: "Largo (in)",
         type: "number",
         placeholder: "Ej: 30",
         required: true
     },
     {
         name: "medidas.ancho",
-        label: "Ancho (cm)",
+        label: "Ancho (in)",
         type: "number",
         placeholder: "Ej: 20",
         required: true
     },
     {
         name: "medidas.alto",
-        label: "Alto (cm)",
+        label: "Alto (in)",
         type: "number",
         placeholder: "Ej: 15",
         required: true
@@ -121,9 +121,10 @@ export const getColumns: any = (
     { key: "origen.direccion.estado", label: "Origen" },
     { key: "destino.direccion.estado", label: "Destino" },
     { key: "medidas.peso", label: "Peso (Lb)" },
-    { key: "medidas.alto", label: "Alto (cm)" },
-    { key: "medidas.largo", label: "Largo (cm)" },
-    { key: "medidas.volumen", label: "Volumen (m³)" },
+    { key: "medidas.alto", label: "Alto (in)" },
+    { key: "medidas.largo", label: "Largo (in)" },
+    { key: "medidas.ancho", label: "Ancho (in)" },
+    { key: "medidas.volumen", label: "Volumen (ft³)" },
     {
         key: "Editar",
         label: "Editar",

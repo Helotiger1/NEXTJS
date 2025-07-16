@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       tipoEnvio,
     } = body;
 
-    const empleadoId = 3;
+    const empleadoId = 3; //aqui iria el id del empleado que esta haciendo la peticion, por ahora lo dejamos estatico
     const almacenCodigo = origenId;
 
     const { 

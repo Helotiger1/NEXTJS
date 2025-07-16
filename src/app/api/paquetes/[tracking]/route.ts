@@ -151,7 +151,16 @@ export async function PUT(req: NextRequest, { params }: { params: { tracking: st
       console.log("🛠️ Medidas actualizadas:", medidasActualizadas);
     }
 
-    const dataActualizar: any = {};
+    const dataActualizar: {
+      descripcion?: string;
+      origenId?: number;
+      destinoId?: number;
+      clienteOrigenId?: number;
+      clienteDestinoId?: number;
+      almacenCodigo?: number;
+      empleadoId?: number;
+      medidasId?: number;
+    } = {};
     if (descripcion !== undefined) dataActualizar.descripcion = descripcion.trim();
     if (origenId !== undefined) dataActualizar.origenId = Number(origenId);
     if (destinoId !== undefined) dataActualizar.destinoId = Number(destinoId);

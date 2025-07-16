@@ -45,8 +45,6 @@ export const formConfig: Field[] = [
 ];
 
 
-
-
 export const initState: Usuario= {
   nombre: "",
   apellido: "",

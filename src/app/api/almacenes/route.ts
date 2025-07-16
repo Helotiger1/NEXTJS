@@ -8,29 +8,34 @@ import {
 // POST - Crear nuevo almacén con datos planos
 export async function POST(req: NextRequest) {
   try {
+    console.log('[ALMACEN-POST] Iniciando creación de almacén');
     
     // Recibir datos planos del cuerpo de la solicitud
     const requestData = await req.json();
+    console.log('[ALMACEN-POST] Datos recibidos del frontend:', JSON.stringify(requestData, null, 2));
 
     // Desempaquetar datos planos a estructura esperada
     const datosTransformados = {
       telefono: requestData.telefono,
       direccion: {
-        linea1: requestData.linea1,
-        linea2: requestData.linea2 || "", // Opcional
-        pais: requestData.pais,
-        estado: requestData.estado,
-        ciudad: requestData.ciudad,
-        codigoPostal: requestData.codigoPostal,
+        linea1: requestData.direccion.linea1,
+        linea2: requestData.direccion.linea2 || "",
+        pais: requestData.direccion.pais,
+        estado: requestData.direccion.estado,
+        ciudad: requestData.direccion.ciudad,
+        codigoPostal: requestData.direccion.codigoPostal,
       },
     };
+    console.log('[ALMACEN-POST] Datos transformados:', JSON.stringify(datosTransformados, null, 2));
 
     // Convertir código postal a número
     if (datosTransformados.direccion.codigoPostal) {
+      console.log('[ALMACEN-POST] Convirtiendo código postal:', datosTransformados.direccion.codigoPostal);
       datosTransformados.direccion.codigoPostal = parseInt(
         datosTransformados.direccion.codigoPostal
       );
       if (isNaN(datosTransformados.direccion.codigoPostal)) {
+        console.log('[ALMACEN-POST] Error: Código postal no es un número válido');
         return NextResponse.json(
           {
             success: false,
@@ -43,8 +48,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Validación de campos requeridos
+    console.log('[ALMACEN-POST] Validando campos requeridos');
     const erroresValidacion = validarAlmacenCompleto(datosTransformados);
     if (erroresValidacion.length > 0) {
+      console.log('[ALMACEN-POST] Errores de validación:', erroresValidacion);
       return NextResponse.json(
         {
           success: false,
@@ -56,8 +63,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Validar unicidad
+    console.log('[ALMACEN-POST] Validando unicidad de datos');
     const erroresUnicidad = await validarAlmacenUnico(datosTransformados);
     if (erroresUnicidad.length > 0) {
+      console.log('[ALMACEN-POST] Conflictos de unicidad:', erroresUnicidad);
       return NextResponse.json(
         {
           success: false,
@@ -69,7 +78,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Crear en transacción
+    console.log('[ALMACEN-POST] Iniciando transacción para crear almacén');
     const almacen = await prisma.$transaction(async (tx) => {
+      console.log('[ALMACEN-POST] Creando dirección...');
       const nuevaDireccion = await tx.direccion.create({
         data: {
           linea1: datosTransformados.direccion.linea1,
@@ -80,16 +91,22 @@ export async function POST(req: NextRequest) {
           codigoPostal: datosTransformados.direccion.codigoPostal,
         },
       });
+      console.log('[ALMACEN-POST] Dirección creada con ID:', nuevaDireccion.id);
 
-      return await tx.almacen.create({
+      console.log('[ALMACEN-POST] Creando almacén...');
+      const nuevoAlmacen = await tx.almacen.create({
         data: {
           telefono: datosTransformados.telefono.toString(),
           direccionId: nuevaDireccion.id,
         },
         include: { direccion: true },
       });
+      console.log('[ALMACEN-POST] Almacén creado con ID:', nuevoAlmacen.codigo);
+
+      return nuevoAlmacen;
     });
 
+    console.log('[ALMACEN-POST] Almacén creado exitosamente:', almacen);
     return NextResponse.json(
       {
         success: true,
@@ -98,7 +115,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Error al crear almacén:", error);
+    console.error('[ALMACEN-POST] Error en el proceso:', error);
     return NextResponse.json(
       {
         success: false,
@@ -116,6 +133,7 @@ export async function POST(req: NextRequest) {
 // GET - Listar todos los almacenes
 export async function GET() {
   try {
+    console.log('[ALMACEN-GET] Obteniendo listado de almacenes');
     const almacenes = await prisma.almacen.findMany({
       include: {
         direccion: true,
@@ -132,9 +150,10 @@ export async function GET() {
       },
     });
 
+    console.log('[ALMACEN-GET] Almacenes encontrados:', almacenes.length);
     return NextResponse.json(almacenes)
   } catch (error) {
-    console.error("Error al obtener almacenes:", error);
+    console.error('[ALMACEN-GET] Error al obtener almacenes:', error);
     return NextResponse.json(
       {
         success: false,

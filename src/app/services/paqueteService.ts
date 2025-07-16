@@ -6,10 +6,10 @@ export interface paquete {
   almacenOrigen: string;
   almacenDestino: string;
   peso: string;
-  largo: string
-  alto: string;
-  ancho: string
-  fecha: string;
+  largo: number
+  alto: number;
+  ancho: number
+  fecha: Date;
   cedula: string;
   estado?: "EN_CAMINO" | "ENTREGADO" | "PENDIENTE";
 }

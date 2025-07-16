@@ -22,12 +22,12 @@ export const initState = {
 export const formConfig: Field[] = [
     {
         name: "clienteOrigen.cedula",
-        label: "Cedula del cliente",
+        label: "Cedula del cliente Origen",
         type: "text",
     },
     {
         name: "clienteDestino.cedula",
-        label: "Cedula Destinatario",
+        label: "Cedula del cliente Destino",
         type: "text",
     },
     {

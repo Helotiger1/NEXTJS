@@ -3,7 +3,7 @@ import prisma from "@/app/lib/prisma";
 import { Prisma } from "@prisma/client";
 
 
-function validarNumeroPositivoQueryParam(value: string | null, paramName: string): { error: string } | null {
+export function validarNumeroPositivoQueryParam(value: string | null, paramName: string): { error: string } | null {
   if (value === null) return null; 
   const num = Number(value);
   if (isNaN(num) || num <= 0) {
@@ -12,7 +12,7 @@ function validarNumeroPositivoQueryParam(value: string | null, paramName: string
   return null;
 }
 
-function validarFechaQueryParam(value: string | null, paramName: string): { error: string } | null {
+export function validarFechaQueryParam(value: string | null, paramName: string): { error: string } | null {
   if (value === null) return null;
   if (isNaN(Date.parse(value))) {
     return { error: `El parámetro '${paramName}' debe ser una fecha válida (YYYY-MM-DD o formato ISO).` };
@@ -20,7 +20,7 @@ function validarFechaQueryParam(value: string | null, paramName: string): { erro
   return null;
 }
 
-function validarTipoEnvioQueryParam(tipo: string | null): { error: string } | null {
+export function validarTipoEnvioQueryParam(tipo: string | null): { error: string } | null {
   if (tipo === null) return null;
   const tiposValidos = ["barco", "avion"];
   if (!tiposValidos.includes(tipo.toLowerCase())) {
@@ -29,7 +29,7 @@ function validarTipoEnvioQueryParam(tipo: string | null): { error: string } | nu
   return null;
 }
 
-function validarEstadoEnvioQueryParam(estado: string | null): { error: string } | null {
+export function validarEstadoEnvioQueryParam(estado: string | null): { error: string } | null {
   if (estado === null) return null;
   const estadosValidos = ["en puerto de salida", "en transito", "en destino"];
   if (!estadosValidos.includes(estado.toLowerCase())) {

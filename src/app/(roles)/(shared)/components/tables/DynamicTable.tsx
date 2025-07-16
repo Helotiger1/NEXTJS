@@ -2,12 +2,15 @@
 import { useState } from "react";
 import {DynamicTableProps} from "./types"
 
+import { motion } from "framer-motion";
+import DynamicHeader from "@/app/(roles)/cliente/components/DynamicHeader";
 
 export default function DynamicTable<T extends object>({
-  children,
+  name,
   columns,
   data,
   rowsPerPage = 5,
+  children
 }: DynamicTableProps<T>) {
   const [page, setPage] = useState(0);
   const totalPages = Math.ceil(data.length / rowsPerPage);
@@ -17,18 +20,19 @@ export default function DynamicTable<T extends object>({
     page * rowsPerPage + rowsPerPage
   );
 
-  return (<>
- 
-    <div className="p-6 bg-white rounded-2xl shadow-xl mt-6 space-y-6">
-       {children}
+  return (
+    <motion.div
+      className="p-6 bg-white rounded-2xl shadow-xl mt-6 space-y-6"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      {name && (<DynamicHeader h1Text={name}>{children}</DynamicHeader>)} 
+
       <table className="min-w-full text-sm text-gray-700 table-fixed overflow-hidden border border-gray-200 rounded-lg">
         <thead className="bg-gradient-to-r from-purple-800 to-purple-600 text-white uppercase tracking-wide text-sm">
           <tr>
             {columns.map((col) => (
-              <th
-                key={String(col.key)}
-                className="px-4 py-3 text-left"
-              >
+              <th key={String(col.key)} className="px-4 py-3 text-left">
                 {col.label}
               </th>
             ))}
@@ -61,7 +65,7 @@ export default function DynamicTable<T extends object>({
           <button
             onClick={() => setPage((p) => Math.max(p - 1, 0))}
             disabled={page === 0}
-            className="px-3 py-1 text-sm rounded-md bg-purple-900 hover:bg-gray-300 disabled:opacity-50"
+            className="px-3 py-1 text-sm rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
           >
             ◀ Anterior
           </button>
@@ -72,8 +76,8 @@ export default function DynamicTable<T extends object>({
               onClick={() => setPage(i)}
               className={`px-3 py-1 text-sm rounded-md transition-all ${
                 page === i
-                  ? 'bg-gray-400 text-white'
-                  : 'bg-purple-600 hover:bg-gray-200'
+                  ? 'bg-purple-700 text-white'
+                  : 'bg-gray-100 hover:bg-gray-200'
               }`}
             >
               {i + 1}
@@ -83,15 +87,12 @@ export default function DynamicTable<T extends object>({
           <button
             onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
             disabled={page >= totalPages - 1}
-            className="px-3 py-1 text-sm rounded-md bg-purple-900 hover:bg-gray-300 disabled:opacity-50"
+            className="px-3 py-1 text-sm rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
           >
             Siguiente ▶
           </button>
         </div>
       )}
-    </div>
-    </>
+    </motion.div>
   );
 }
-
-

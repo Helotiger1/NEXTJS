@@ -7,8 +7,9 @@ export type Column<T> = {
 };
 
 export type DynamicTableProps<T> = {
-  children?: ReactNode
+  name?: string
   columns: Column<T>[];
   data: T[];
   rowsPerPage?: number;
+  children?: ReactNode
 };

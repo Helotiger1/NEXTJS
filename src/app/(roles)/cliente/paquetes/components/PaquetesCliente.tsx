@@ -20,6 +20,6 @@ export const PaquetesCliente = ({id} : { id?: string}) => {
 
 
     
-    return <DynamicTable data={data} columns={columns} rowsPerPage={4}></DynamicTable>
+    return <DynamicTable data={data} name="Historial de Paquetes"columns={columns} rowsPerPage={4}></DynamicTable>
 
 };

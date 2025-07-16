@@ -16,6 +16,7 @@ export type Field = {
 
 export type DynamicFormProps<TData> = {
   initConfig?: any;
+  name? : string
   config: Field[];
   onSubmit: (data: TData) => void | Promise<void>;
   onCancel?: (e: React.MouseEvent<HTMLButtonElement>) => void;

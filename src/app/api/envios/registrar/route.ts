@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/prisma";
 import { Prisma } from "@prisma/client";
-
+import {validarEstadoEnvioQueryParam, validarFechaQueryParam, validarNumeroPositivoQueryParam, validarTipoEnvioQueryParam} from "../route"
 
 // Validaciones para el modelo Envio
 function validarTipoEnvio(tipo: string): string | null {
@@ -349,58 +349,8 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-// GET: Listar paquetes con paginación y filtros
 export async function GET(req: NextRequest) {
   try {
-        //En vista de que se rompio, procedere a meter cualquier mamada aqui.
-    return NextResponse.json( [
-  {
-    tracking: "123456789",
-    descripcion: "Paquete de documentos importantes",
-    origen: "California",
-    destino: "Doral",
-    peso: "2 kg",
-    alto: "10 cm",
-    largo: "30 cm",
-    volumen: "0.003 m³",
-    fecha: "2025-07-10",
-    cedulaOrigen: 3141414,
-    cedulaDestino : 4314144
-  },
-  {
-    tracking: "987654321",
-    descripcion: "Componentes electrónicos",
-    origen: "Shanghai, China",
-    destino: "Caracas, Venezuela",
-    peso: "15 kg",
-    alto: "40 cm",
-    largo: "60 cm",
-    volumen: "0.096 m³",
-    fecha: "2025-07-08",
-  },
-  {
-    tracking: "112233445",
-    descripcion: "Muestra de tela",
-    origen: "Madrid, España",
-    destino: "Maracaibo, Venezuela",
-    peso: "0.5 kg",
-    alto: "5 cm",
-    largo: "20 cm",
-    volumen: "0.001 m³",
-    fecha: "2025-07-11",
-  },
-  {
-    tracking: "556677889",
-    descripcion: "Libros y material de estudio",
-    origen: "Bogotá, Colombia",
-    destino: "Valencia, Venezuela",
-    peso: "8 kg",
-    alto: "25 cm",
-    largo: "45 cm",
-    volumen: "0.028 m³",
-    fecha: "2025-07-09",
-  },
-]);
     const { searchParams } = new URL(req.url);
 
     // Filtros
@@ -410,6 +360,7 @@ export async function GET(req: NextRequest) {
     const clienteOrigenId = searchParams.get("clienteOrigenId");
     const clienteDestinoId = searchParams.get("clienteDestinoId");
     const tracking = searchParams.get("tracking");
+    const clienteId = searchParams.get("clienteId");
 
     // Ordenamiento (opcional)
     const sortField = searchParams.get("sort") || "tracking";
@@ -433,6 +384,13 @@ export async function GET(req: NextRequest) {
         { destinoId: Number(almacenCodigo) },
       ];
     }
+    
+    if (clienteId && !isNaN(Number(clienteId))) {
+      where.OR = [
+        { clienteOrigenId: Number(clienteId) },
+        { clienteDestinoId: Number(clienteId) },
+      ];
+    }
 
     if (clienteOrigenId && !isNaN(Number(clienteOrigenId))) {
       where.clienteOrigenId = Number(clienteOrigenId);
@@ -451,10 +409,9 @@ export async function GET(req: NextRequest) {
     if (sortField === "tracking") orderBy.tracking = sortOrder;
     else if (sortField === "estado") orderBy.estado = sortOrder;
     else if (sortField === "almacenCodigo") orderBy.almacenCodigo = sortOrder;
-    else orderBy.tracking = "desc";
+    else orderBy.tracking = "asc";
 
     // 1. Filtro combinado cliente (origen o destino)
-    const clienteId = searchParams.get("clienteId");
     if (clienteId && !isNaN(Number(clienteId))) {
       where.OR = [
         { clienteOrigenId: Number(clienteId) },
@@ -575,7 +532,7 @@ export async function GET(req: NextRequest) {
           },
           orderBy: {
             envio: {
-              fechaSalida: "desc",
+              fechaSalida: "asc",
             },
           },
         },
@@ -589,7 +546,7 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      orderBy,
+      //orderBy,
     });
 
     // Enriquecer los datos con información calculada
@@ -634,14 +591,20 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json({
-      success: true,
-      data: paquetesEnriquecidos,
-    });
+    return NextResponse.json(
+paquetesEnriquecidos
+    );
   } catch (error: unknown) {
     console.error("Error GET /api/paquetes:", error);
     return NextResponse.json(
-      { error: "Error interno del servidor al actualizar el envío." },
+      {
+        success: false,
+        error: "Error al obtener paquetes",
+        details:
+          process.env.NODE_ENV === "development"
+            ? (error as Error).message
+            : undefined,
+      },
       { status: 500 }
     );
   }

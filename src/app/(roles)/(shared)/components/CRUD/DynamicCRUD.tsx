@@ -15,12 +15,15 @@ interface DynamicCRUDProps<TData extends Object, TResult extends Object> {
     formConfig: Field[];
     getColumns: any;
     checks?: boolean;
+    h1Name?: string;
+    formName: string
 }
 
 export default function DynamicCRUD<
     TData extends Object,
     TResult extends Object = TData
 >({
+    h1Name, formName,
     service,
     id,
     initState,
@@ -42,8 +45,8 @@ export default function DynamicCRUD<
     } = useCRUD<TData, TResult>(service, id, initState, updater, checks);
 
     const columns = checks
-        ?  getColumns(handleCheck, array, id) :  getColumns(handleDelete, handleEdit);
-        
+        ? getColumns(handleCheck, array, id)
+        : getColumns(handleDelete, handleEdit);
 
     if (loading) return <p>Cargando...</p>;
     if (error) return <p>Error al cargar</p>;
@@ -52,10 +55,13 @@ export default function DynamicCRUD<
     if (checks) {
         return (
             <>
-                <DynamicForm
+                <DynamicTable
+                    name={h1Name}
+                    columns={columns}
+                    data={data}></DynamicTable>
+                <DynamicForm name={formName}
                     config={formConfig}
                     onSubmit={handleSubmit}></DynamicForm>
-                <DynamicTable columns={columns} data={data}></DynamicTable>
             </>
         );
     }
@@ -63,14 +69,17 @@ export default function DynamicCRUD<
     if (form == null) {
         return (
             <>
-                <GenericButton
-                    handleAction={handleAgregar}
-                    content="Agregar"
-                    type="button"></GenericButton>
                 <DynamicTable
+                    name={h1Name}
                     columns={columns}
                     data={data}
-                    rowsPerPage={2}></DynamicTable>
+                    rowsPerPage={8}>
+                    {" "}
+                    <GenericButton
+                        handleAction={handleAgregar}
+                        content="Agregar"
+                        type="button"></GenericButton>
+                </DynamicTable>
             </>
         );
     }
@@ -78,7 +87,7 @@ export default function DynamicCRUD<
     if (form) {
         const initialConfig = form ?? initState;
         return (
-            <DynamicForm
+            <DynamicForm name={formName}
                 initConfig={initialConfig}
                 config={formConfig}
                 onSubmit={handleSubmit}

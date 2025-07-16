@@ -5,7 +5,7 @@ import { almacenService } from "@/app/services/almacenService";
 import { almacen } from "@/app/services/almacenService";
 export const Almacenes = () => {
     return (
-        <DynamicCRUD<almacen>
+        <DynamicCRUD<almacen> h1Name="Almacenes" formName="Ingrese los datos del almacen"
             id={"codigo"}
             formConfig={formConfig}
             getColumns={getColumns}

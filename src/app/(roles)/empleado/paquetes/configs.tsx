@@ -66,13 +66,13 @@ export const formConfig: Field[] = [
         ],
     },
     {
-        name: "origen.direccion.estado",
+        name: "origenId",
         label: "Lugar origen",
         type: "select",
         options: getAlmacenes
     },
     {
-        name: "destino.direccion.estado",
+        name: "destinoId",
         label: "Lugar destino",
         type: "select",
         options: getAlmacenes

@@ -11,6 +11,8 @@ export const Paquetes = () => {
             formConfig={formConfig}
             getColumns={getColumns}
             initState={initState}
-            service={paqueteService}></DynamicCRUD>
+            service={paqueteService} h1Name="Registre sus paquetes"
+            formName="Rellene los datos correspondientes"
+            name="Paquetes en registro"></DynamicCRUD>
     );
 };

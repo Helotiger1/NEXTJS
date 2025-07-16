@@ -9,10 +9,11 @@ import {
 // GET: Ver factura
 export async function GET(
   req: NextRequest,
-  { params }: { params: { numero: string } }
+  context: { params: { numero: string } }
 ) {
   try {
-    const numeroFactura = parseInt(params.numero, 10);
+    const {numero} = await context.params;
+    const numeroFactura = parseInt(numero, 10);
 
     if (isNaN(numeroFactura)) {
       return NextResponse.json(
@@ -58,10 +59,11 @@ export async function GET(
 // PUT: Editar estado y método de pago
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { numero: string } }
+  context: { params: { numero: string } }
 ) {
   try {
-    const numeroFactura = parseInt(params.numero, 10);
+    const {numero} = await context.params;
+    const numeroFactura = parseInt(numero, 10);
 
     if (isNaN(numeroFactura)) {
       return NextResponse.json(
@@ -139,10 +141,11 @@ export async function PUT(
 // DELETE: Eliminar factura por número
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { numero: string } }
+    context: { params: { numero: string } }
   ) {
     try {
-      const numeroFactura = parseInt(params.numero, 10);
+      const {numero} = await context.params;
+      const numeroFactura = parseInt(numero, 10);
   
       if (isNaN(numeroFactura)) {
         return NextResponse.json(

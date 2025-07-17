@@ -17,6 +17,6 @@ export const PaquetesCliente = ({id} : { id?: string}) => {
 
 
     
-    return <DynamicTable  idName="tracking" data={data} name="Historial de Paquetes"columns={columns} rowsPerPage={4}></DynamicTable>
+    return <DynamicTable  idName="tracking" data={data} name="Historial de Paquetes"columns={columns} rowsPerPage={8}></DynamicTable>
 
 };

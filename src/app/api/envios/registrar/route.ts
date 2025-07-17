@@ -1,23 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/prisma";
-import { convertirNumeros } from "@/app/lib/axios";
 
 
 // POST: Registrar un nuevo envío
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const body2 = convertirNumeros(body)
         const {
             tipo,
             almacenOrigen,
             almacenEnvio,
             paquetes
-        } = body2;
+        } = body;
 
 
-
-        const empleadoCedula = 2;
+        const empleadoCedula = 4;
         const estado = 'REGISTRADO';
         const fechaSalida = new Date();
         const fechaLlegada = new Date();
@@ -45,7 +42,7 @@ export async function POST(req: NextRequest) {
         // Validar existencia de almacenes y empleado
         const [origen, destino, empleado] = await Promise.all([
             prisma.almacen.findUnique({ where: { codigo: almacenOrigen } }),
-            prisma.almacen.findUnique({ where: { codigo: almacenEnvio} }),
+            prisma.almacen.findUnique({ where: { codigo: almacenEnvio } }),
             prisma.usuario.findUnique({ where: {id : empleadoCedula} }),
         ]);
 
@@ -55,10 +52,6 @@ export async function POST(req: NextRequest) {
                 { status: 404 }
             );
         }
-
-
-
-
 
         // Crear el envío y asociar paquetes
         const nuevoEnvio = await prisma.envio.create({
@@ -103,109 +96,36 @@ export async function POST(req: NextRequest) {
     }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
+        const estado = "REGISTRADO";
 
-        // Filtros
-        const estado = searchParams.get("estado");
-        const empleadoId = searchParams.get("empleadoId");
-        const almacenCodigo = searchParams.get("almacenCodigo");
-        const clienteOrigenId = searchParams.get("clienteOrigenId");
-        const clienteDestinoId = searchParams.get("clienteDestinoId");
-        const tracking = searchParams.get("tracking");
-        const clienteId = searchParams.get("clienteId");
-
-        // Ordenamiento (opcional)
-        const sortField = searchParams.get("sort") || "tracking";
-        const sortOrder = searchParams.get("order") === "asc" ? "asc" : "desc";
-
-        // Construir cláusula WHERE
         const where: Prisma.PaqueteWhereInput = {};
 
-        if (estado && validarEstadoPaqueteString(estado)) {
-            where.estado = estado as EstadoPaquete;
+        if (estado ) {
+            where.estado = estado
         }
 
-        if (empleadoId && !isNaN(Number(empleadoId))) {
-            where.empleadoId = Number(empleadoId);
-        }
-
-        if (almacenCodigo && !isNaN(Number(almacenCodigo))) {
-            where.OR = [
-                { almacenCodigo: Number(almacenCodigo) },
-                { origenId: Number(almacenCodigo) },
-                { destinoId: Number(almacenCodigo) },
-            ];
-        }
-
-        if (clienteId && !isNaN(Number(clienteId))) {
-            where.OR = [
-                { clienteOrigenId: Number(clienteId) },
-                { clienteDestinoId: Number(clienteId) },
-            ];
-        }
-
-        if (clienteOrigenId && !isNaN(Number(clienteOrigenId))) {
-            where.clienteOrigenId = Number(clienteOrigenId);
-        }
-
-        if (clienteDestinoId && !isNaN(Number(clienteDestinoId))) {
-            where.clienteDestinoId = Number(clienteDestinoId);
-        }
-
-        if (tracking && !isNaN(Number(tracking))) {
-            where.tracking = Number(tracking);
-        }
-
-        // Construir ORDER BY
-        const orderBy: Prisma.PaqueteOrderByWithRelationInput = {};
-        if (sortField === "tracking") orderBy.tracking = sortOrder;
-        else if (sortField === "estado") orderBy.estado = sortOrder;
-        else if (sortField === "almacenCodigo")
-            orderBy.almacenCodigo = sortOrder;
-        else orderBy.tracking = "asc";
-
-        // 1. Filtro combinado cliente (origen o destino)
-        if (clienteId && !isNaN(Number(clienteId))) {
-            where.OR = [
-                { clienteOrigenId: Number(clienteId) },
-                { clienteDestinoId: Number(clienteId) },
-            ];
-        }
-
-        /*/ 2. Filtro por fechas
-    const fechaInicio = searchParams.get("fechaInicio");
-    const fechaFin = searchParams.get("fechaFin");
-    if (fechaInicio || fechaFin) {
-      where.fechaRegistro = {};
-      if (fechaInicio) where.fechaRegistro.gte = new Date(fechaInicio);
-      if (fechaFin) where.fechaRegistro.lte = new Date(fechaFin);
-    }*/
-
-        // 3. Filtro por tipo de envío
-        const tipoEnvio = searchParams.get("tipoEnvio");
-        if (tipoEnvio) {
-            where.detalleEnvio = {
-                some: {
-                    envio: {
-                        tipo: tipoEnvio,
-                    },
-                },
-            };
-        }
-
-        // 4. Filtro por estado de factura
-        const estadoFactura = searchParams.get("estadoFactura");
-        if (estadoFactura) {
-            where.detalleFactura = {
-                factura: {
-                    estado: estadoFactura,
-                },
-            };
-        }
-
-        // Obtener todos los paquetes con relaciones completas
         const paquetes = await prisma.paquete.findMany({
             where,
             include: {
@@ -299,12 +219,9 @@ export async function GET(req: NextRequest) {
                     },
                 },
             },
-            //orderBy,
         });
 
-        // Enriquecer los datos con información calculada
         const paquetesEnriquecidos = paquetes.map((paquete) => {
-            // Calcular días en tránsito si aplica
             let diasTransito = null;
             let envioActual = null;
 
@@ -314,13 +231,11 @@ export async function GET(req: NextRequest) {
                 if (envioActual?.fechaSalida) {
                     const fechaSalida = new Date(envioActual.fechaSalida);
                     diasTransito = Math.floor(
-                        (Date.now() - fechaSalida.getTime()) /
-                            (1000 * 60 * 60 * 24)
+                        (Date.now() - fechaSalida.getTime()) / (1000 * 60 * 60 * 24)
                     );
                 }
             }
 
-            // Calcular tarifa estimada
             let tarifaEstimada = null;
             if (envioActual) {
                 const volumenPiesCubicos =
@@ -334,10 +249,7 @@ export async function GET(req: NextRequest) {
                 } else if (envioActual.tipo === "AEREO") {
                     const porPeso = paquete.medidas.peso * 7;
                     const porVolumen = volumenPiesCubicos * 7;
-                    tarifaEstimada = Math.max(
-                        Math.max(porPeso, porVolumen),
-                        45
-                    );
+                    tarifaEstimada = Math.max(Math.max(porPeso, porVolumen), 45);
                 }
             }
 

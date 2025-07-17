@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true, facturas }, { status: 200 });
+    return NextResponse.json(facturas , { status: 200 });
   } catch (error) {
     console.error("Error al obtener facturas:", error);
     return NextResponse.json({ success: false, error: "Error interno" }, { status: 500 });

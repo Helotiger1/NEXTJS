@@ -46,18 +46,6 @@ export const columns = [
     </button>
   ),
 },
-  {
-    key: "acciones_pdf",
-    label: "PDF",
-    render: (_: any, row: any) => (
-      <button
-        onClick={() => alert(`(Mock) Descargar PDF de ${row.name}`)}
-        className="text-blue-600 underline"
-      >
-        Descargar PDF
-      </button>
-    ),
-  },
     {
     key: "acciones",
     label: "Acciones",
@@ -71,3 +59,6 @@ export const columns = [
     ),
   },
 ];
+
+
+const detalleFacturaColumns = []

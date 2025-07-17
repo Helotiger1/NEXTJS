@@ -20,7 +20,6 @@ export const EditState: React.FC<EstadoEditableProps> = ({
   };
 
   const opciones=[
-        "REGISTRADO",
         "EN TRANSITO",
         "EN ALMACEN",
       ]
@@ -30,7 +29,7 @@ export const EditState: React.FC<EstadoEditableProps> = ({
       value={estado}
       onChange={handleChange}
       onBlur={() => setEditing(false)}
-      className="bg-black border rounded px-2 py-1"
+      className="bg-white border rounded px-2 py-1"
     >
       {opciones.map((opcion) => (
         <option key={opcion} value={opcion}>

@@ -2,10 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import {
-  UserCircle,
-  LogOut,
-} from 'lucide-react';
+import { UserCircle, LogOut } from 'lucide-react';
 
 type SidebarItem = {
   href: string;
@@ -28,31 +25,39 @@ export function BaseLayout({
   const pathname = usePathname();
 
   return (
-    <div className="grid grid-rows-[1fr_auto] grid-cols-[16rem_1fr] min-h-screen bg-black text-white overflow-visible">
+    <div className="grid grid-cols-[16rem_1fr] min-h-screen bg-black text-white relative">
       {/* Sidebar */}
-      <aside className="bg-[#313793] p-6 sticky top-0 h-screen flex flex-col">
+      <aside className="bg-[#313793] p-6 sticky top-0 h-screen flex flex-col z-10">
         {/* Perfil */}
         <Link href={profileURL}>
-          <div className="mb-8 p-4 rounded-md hover:bg-[#3f44d3] transition flex items-center justify-center gap-2">
-            <UserCircle className="h-6 w-6 text-white" />
-            <h2 className="text-2xl font-bold text-white">Perfil</h2>
+          <div
+            className={`mb-8 p-4 rounded-md transition flex items-center justify-center gap-2 ${
+              pathname === profileURL
+                ? 'bg-black text-white shadow-md'
+                : 'hover:bg-[#3f44d3] text-white'
+            }`}
+          >
+            <UserCircle className="h-6 w-6" />
+            <h2 className="text-2xl font-bold">Perfil</h2>
           </div>
         </Link>
 
         {/* Navegación */}
-        <nav className="flex flex-col gap-2">
+        <nav className="flex flex-col gap-2 relative z-10">
           {sidebarItems.map(({ href, icon, label }) => {
-            const isActive = pathname === href || pathname.startsWith(href + '/');
+            const isActive =
+              pathname === href || pathname.startsWith(href + '/');
 
             return (
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-3 px-4 py-2 text-lg font-semibold rounded-l-xl transition ${
-                  isActive
-                    ? 'bg-black text-white shadow-inner'
-                    : 'text-white hover:bg-[#3f44d3] hover:text-white'
-                }`}
+                className={`flex items-center gap-3 px-4 py-2 text-lg font-semibold transition-all relative
+                  ${
+                    isActive
+                      ? 'bg-black text-white shadow-md rounded-l-full mr-[-1.5rem]'
+                      : 'text-white hover:bg-[#3f44d3] hover:text-white rounded-l-xl'
+                  }`}
               >
                 <span>{icon}</span>
                 {label}
@@ -74,15 +79,13 @@ export function BaseLayout({
         </button>
       </aside>
 
-      {/* Contenido principal con fondo heredado negro */}
-      <section className="p-6 overflow-auto bg-black text-white">
-        {children}
-      </section>
-
-      {/* Footer */}
-      <footer className="col-span-2 text-center py-4 text-sm text-gray-500">
-        "CargoTruck 2025 — All rights reserved 🚛"
-      </footer>
+      {/* Panel derecho */}
+      <main className="flex flex-col min-h-screen bg-black">
+        <section className="flex-grow p-6">{children}</section>
+        <footer className="text-center py-4 text-sm text-gray-500">
+          CargoTruck 2025 — Todos los derechos reservados
+        </footer>
+      </main>
     </div>
   );
 }

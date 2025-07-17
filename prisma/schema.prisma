@@ -124,8 +124,8 @@ model Envio {
   numero       Int      @id @default(autoincrement())
   tipo         String
   estado       String
-  fechaSalida  DateTime
-  fechaLlegada DateTime
+  fechaSalida  String
+  fechaLlegada String
 
   almacenOrigen Int 
   almacenEnvio  Int 

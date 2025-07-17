@@ -51,7 +51,7 @@ export const initState: Usuario= {
   cedula: "",
   telefono: "",
   email: "",
-  contraseña: "",
+  contrasena: "",
   rol: "ADMIN" 
 }
 

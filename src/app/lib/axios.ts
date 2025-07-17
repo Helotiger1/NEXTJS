@@ -1,5 +1,28 @@
 import axios from 'axios';
 
+
+
+ export function convertirNumeros(value: any): any {
+  if (Array.isArray(value)) {
+    return value.map(convertirNumeros);
+  }
+
+  if (value !== null && typeof value === "object") {
+    const result: any = {};
+    for (const key in value) {
+      result[key] = convertirNumeros(value[key]);
+    }
+    return result;
+  }
+
+  // Detecta strings numéricos simples: "42", "003", "5"
+  if (typeof value === "string" && /^\d+$/.test(value)) {
+    return Number(value);
+  }
+
+  return value;
+}
+
 const api = axios.create({
   baseURL: 'http://localhost:3000/api',
   headers: {
@@ -56,6 +79,9 @@ export function deepUnflatten(input: any): any {
 
     return result;
   };
+
+
+
 
   const traverse = (obj: any): any => {
     if (Array.isArray(obj)) {

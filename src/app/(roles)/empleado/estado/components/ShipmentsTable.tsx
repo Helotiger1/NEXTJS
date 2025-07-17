@@ -29,8 +29,9 @@ export const ShipmentsTable = () => {
 
     const columns = getColumns(onChange);
 
+
     if (loading) return <p>Cargando...</p>;
     if (error) return <p>Error al cargar</p>;
-
+    console.log(data);
     return <DynamicTable data={data} columns={columns} rowsPerPage={2} />;
 };

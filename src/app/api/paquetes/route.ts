@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       tipoEnvio,
     } = body;
 
-    const empleadoId = 3; //aqui iria el id del empleado que esta haciendo la peticion, por ahora lo dejamos estatico
+    const empleadoId = 2; //aqui iria el id del empleado que esta haciendo la peticion, por ahora lo dejamos estatico
     const almacenCodigo = origenId;
 
     const { 
@@ -98,9 +98,13 @@ export async function POST(req: NextRequest) {
       errors.estado = "El estado inicial debe ser REGISTRADO";
     }
 
+
+    console.log(errors);
     if (Object.keys(errors).length > 0) {
       return NextResponse.json({ success: false, errors }, { status: 400 });
     }
+
+    console.log("aun 1")
 
     const [almacen, empleado, origen, destino, clienteOrigen, clienteDestino] = await Promise.all([
       prisma.almacen.findUnique({ where: { codigo: processedData.almacenCodigo } }),
@@ -110,6 +114,7 @@ export async function POST(req: NextRequest) {
       prisma.usuario.findUnique({ where: { id: processedData.clienteOrigenId }, include: { roles: true } }),
       prisma.usuario.findUnique({ where: { id: processedData.clienteDestinoId }, include: { roles: true } }),
     ]);
+     console.log("aun 2")
 
     if (!almacen) errors.almacenCodigo = "Almacén no encontrado";
     if (!empleado) errors.empleadoId = "Empleado no encontrado";
@@ -117,7 +122,7 @@ export async function POST(req: NextRequest) {
     if (!destino) errors.destinoId = "Almacén destino no encontrado";
     if (!clienteOrigen) errors.clienteOrigenId = "Cliente origen no encontrado";
     if (!clienteDestino) errors.clienteDestinoId = "Cliente destino no encontrado";
-
+ console.log("aun 3")
     if (Object.keys(errors).length > 0) {
       return NextResponse.json({ success: false, errors }, { status: 404 });
     }

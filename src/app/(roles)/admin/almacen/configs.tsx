@@ -15,16 +15,6 @@ export const initState = {
 
 export const formConfig: Field[] = [
     {
-        name: "direccion.linea1",
-        label: "Linea 1",
-        type: "text",
-    },
-    {
-        name: "direccion.linea2",
-        label: "Linea 2",
-        type: "text",
-    },
-    {
         name: "direccion.pais",
         label: "Pais",
         type: "text",
@@ -42,6 +32,16 @@ export const formConfig: Field[] = [
     {
         name: "direccion.codigoPostal",
         label: "Codigo Postal",
+        type: "text",
+    },
+    {
+        name: "direccion.linea1",
+        label: "Linea 1",
+        type: "text",
+    },
+    {
+        name: "direccion.linea2",
+        label: "Linea 2",
         type: "text",
     },
     {

@@ -19,8 +19,10 @@ export async function POST(req: NextRequest) {
       rol: body.rol || Rol.CLIENTE, // Valor por defecto
     };
 
+    
+    console.log(datosTransformados)
     // Validar campos primero (antes de verificar existencia)
-    const errores = validarUsuario(datosTransformados);
+    /* const errores = validarUsuario(datosTransformados);
     if (errores.length > 0) {
       return NextResponse.json(
         {
@@ -31,7 +33,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-
+ */
     // Verificar existencia (cédula o email) en una sola consulta
     const usuarioExistente = await prisma.usuario.findFirst({
       where: {

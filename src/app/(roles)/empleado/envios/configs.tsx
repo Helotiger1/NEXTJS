@@ -4,12 +4,12 @@
 import { Field } from "../../(shared)/components/forms/types";
 export const formConfig: Field[] = [
     {
-        name: "tipoEnvio",
+        name: "tipo",
         label: "Tipo de Envio",
         type: "select",
         options: [
-            { value: "Doral", label: "Barco" },
-            { value: "Cliente", label: "Avion" },
+            { value: "BARCO", label: "Barco" },
+            { value: "AVION", label: "Avion" },
         ],
     },
     {

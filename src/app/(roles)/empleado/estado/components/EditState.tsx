@@ -20,10 +20,9 @@ export const EditState: React.FC<EstadoEditableProps> = ({
   };
 
   const opciones=[
-        "Recibido",
-        "En almacen",
-        "Disponible para ser despachado",
-        "Despachado",
+        "REGISTRADO",
+        "EN TRANSITO",
+        "EN ALMACEN",
       ]
 
   return editing ? (

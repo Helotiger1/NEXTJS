@@ -47,9 +47,9 @@ export default function useCRUD<TData, TResult>(
 
     const handleSubmit = async (data: TResult) => {
         if (checks){
-          const aux = {...data, array};
+          const aux = {...data, paquetes: array};
           console.log(aux);
-          service.crear(aux);
+          await service.crear(aux);
           setArray([]);
         }
 

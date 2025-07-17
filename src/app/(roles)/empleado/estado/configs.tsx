@@ -3,9 +3,9 @@ import { EditState } from "./components/EditState";
 
 
 export const getColumns: any = (onChange: (id: string, nuevoEstado: string) => void) => [
-  { key: "cod", label: "Codigo de envio" },
-  { key: "origen", label: "Origen" },
-  { key: "destino", label: "Destino" },
+  { key: "numero", label: "Codigo de envio" },
+  { key: "Origen.direccion.estado", label: "Origen" },
+  { key: "Envio.direccion.estado", label: "Destino" },
   { key: "fechaSalida", label: "Fecha Salida" },
   { key: "tipo", label: "Tipo" },
   {

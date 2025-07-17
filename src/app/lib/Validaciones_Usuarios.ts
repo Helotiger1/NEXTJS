@@ -39,6 +39,6 @@ export const validarUsuario = (usuario: UsuarioInput): string[] => {
     } else if (usuario.contrasena.length < 8) {
         errors.push("La contraseña debe tener al menos 8 caracteres");
     }
-
+    console.log(errors)
     return errors;
 };

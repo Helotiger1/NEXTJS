@@ -15,7 +15,7 @@ export default function EmpleadoInicioPage() {
       className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-white"
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
+    transition={{ duration: 0.4, ease: 'easeOut' }}
     >
       {/* Bienvenida */}
       <h1 className="text-4xl font-bold tracking-tight mb-2">
@@ -73,19 +73,19 @@ export default function EmpleadoInicioPage() {
       {/* Accesos rápidos */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <Link
-          href="/empleado/registrar-paquete"
+          href="/empleado/paquetes"
           className="bg-purple-700 hover:bg-purple-800 text-white text-center font-semibold py-8 px-4 rounded-2xl transition text-lg shadow-md"
         >
           Registrar paquete
         </Link>
         <Link
-          href="/empleado/asociar-envio"
+          href="/empleado/envios"
           className="bg-blue-700 hover:bg-blue-800 text-white text-center font-semibold py-8 px-4 rounded-2xl transition text-lg shadow-md"
         >
           Asociar envío
         </Link>
         <Link
-          href="/empleado/cambiar-estado"
+          href="/empleado/estado"
           className="bg-yellow-700 hover:bg-yellow-800 text-white text-center font-semibold py-8 px-4 rounded-2xl transition text-lg shadow-md"
         >
           Cambiar estado

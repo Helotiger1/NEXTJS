@@ -1,9 +1,10 @@
 "use client";
 
+import { motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 
 interface User {
-  name: string;
+  nombre: string;
   email: string;
   telefono: string;
   cedula: string;
@@ -26,51 +27,23 @@ export default function UserProfile() {
 
   if (!user) {
     return (
-      <p style={{ color: "white", textAlign: "center", marginTop: "2rem" }}>
+      <p className="text-white text-center mt-8">
         Cargando usuario...
       </p>
     );
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "100vh",
-        backgroundColor: "#000",
-        color: "#fff",
-        fontFamily: "Arial, sans-serif",
-        padding: "32px",
-      }}
+    <motion.div
+      className="flex justify-center items-center min-h-screen bg-black text-white font-sans p-8"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
     >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          padding: "32px",
-          borderRadius: "12px",
-          maxWidth: "600px",
-          width: "100%",
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-        }}
-      >
-        <div
-          style={{
-            backgroundColor: "#fff",
-            borderRadius: "50%",
-            width: "128px",
-            height: "128px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: "24px",
-          }}
-        >
+      <div className="flex flex-col items-center p-8 rounded-xl max-w-xl w-full shadow-lg bg-gray-900">
+        <div className="bg-white rounded-full w-32 h-32 flex items-center justify-center mb-6">
           <svg
-            style={{ width: "80px", height: "80px", color: "#000" }}
+            className="w-20 h-20 text-black"
             fill="currentColor"
             viewBox="0 0 24 24"
           >
@@ -78,64 +51,27 @@ export default function UserProfile() {
           </svg>
         </div>
 
-        <h1 style={{ fontSize: "36px", fontWeight: "bold", marginBottom: "8px" }}>
-          {user.name}
-        </h1>
-        <p style={{ fontSize: "20px", color: "#A0A0A0", marginBottom: "40px" }}>
-          {user.email}
-        </p>
+        <h1 className="text-3xl font-bold mb-2">{user.nombre}</h1>
+        <p className="text-lg text-gray-400 mb-10">{user.email}</p>
 
-        <div style={{ textAlign: "center", marginBottom: "40px", width: "100%" }}>
-          <h2 style={{ fontSize: "24px", fontWeight: "600", marginBottom: "16px" }}>
-            Información
-          </h2>
-          <div
-            style={{
-              fontSize: "18px",
-              lineHeight: 1.5,
-              maxWidth: "448px",
-              margin: "0 auto",
-              display: "flex",
-              flexDirection: "column",
-              gap: "12px",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                width: "100%",
-              }}
-            >
-              <span style={{ fontWeight: "bold", color: "#C0C0C0" }}>Teléfono:</span>
-              <span style={{ color: "#D0D0D0" }}>{user.telefono}</span>
+        <div className="text-center w-full mb-10">
+          <h2 className="text-2xl font-semibold mb-4">Información</h2>
+          <div className="text-lg leading-relaxed max-w-md mx-auto flex flex-col gap-3">
+            <div className="flex justify-between items-center w-full">
+              <span className="font-bold text-gray-400">Teléfono:</span>
+              <span className="text-gray-300">{user.telefono}</span>
             </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                width: "100%",
-              }}
-            >
-              <span style={{ fontWeight: "bold", color: "#C0C0C0" }}>Email:</span>
-              <span style={{ color: "#D0D0D0" }}>{user.email}</span>
+            <div className="flex justify-between items-center w-full">
+              <span className="font-bold text-gray-400">Email:</span>
+              <span className="text-gray-300">{user.email}</span>
             </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                width: "100%",
-              }}
-            >
-              <span style={{ fontWeight: "bold", color: "#C0C0C0" }}>Cedula:</span>
-              <span style={{ color: "#D0D0D0" }}>{user.cedula}</span>
+            <div className="flex justify-between items-center w-full">
+              <span className="font-bold text-gray-400">Cédula:</span>
+              <span className="text-gray-300">{user.cedula}</span>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

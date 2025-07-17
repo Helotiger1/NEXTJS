@@ -148,6 +148,24 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
+
+      if (typeof window !== 'undefined') {
+      const userJson = localStorage.getItem('user');
+      if (userJson) {
+        try {
+          const user = JSON.parse(userJson);
+          if (user && user.id) {
+            config.headers = {
+              ...config.headers,
+              'userId': user.id,
+            };
+          }
+        } catch {
+          console.log("nos jodimos")
+        }
+      }
+    }
+
     const method = config.method?.toLowerCase();
 
 

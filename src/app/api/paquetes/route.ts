@@ -11,8 +11,11 @@ import { Prisma } from "@prisma/client";
 // POST: Crear nuevo paquete
 export async function POST(req: NextRequest) {
   try {
+        const userId = req.headers.get('userId');
+            console.log(userId);
     const body = await req.json();
     console.log("Datos recibidos:", body);
+
 
     const {
       descripcion,

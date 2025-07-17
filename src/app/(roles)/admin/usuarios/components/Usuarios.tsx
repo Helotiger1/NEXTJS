@@ -7,7 +7,7 @@ import { formConfig,initState, getColumns } from './configs';
 
 export const Usuarios = () => {
     return (
-        <DynamicCRUD<Usuario>
+        <DynamicCRUD<Usuario> h1Name='Usuarios' formName='Ingrese los datos del almacen'
             id={'cedula'}
             formConfig={formConfig}
             getColumns={getColumns}

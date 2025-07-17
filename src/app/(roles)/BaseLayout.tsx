@@ -67,7 +67,7 @@ export function BaseLayout({
             sessionStorage.removeItem('bienvenida-mostrada');
             router.push('/');
           }}
-          className="mt-auto flex items-center gap-2 px-4 py-2 rounded-md text-white bg-red-500 hover:bg-red-700 transition"
+          className="mt-auto flex items-center gap-2 px-4 py-2 rounded-md text-white bg-black hover:bg-red-700 transition"
         >
           <LogOut className="h-5 w-5" />
           Cerrar sesión

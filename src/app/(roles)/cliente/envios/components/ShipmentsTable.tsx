@@ -1,8 +1,51 @@
 'use client';
 
 import { useState } from 'react';
-import { fakeShipments } from '../configs';
+
+
 import { motion } from 'framer-motion';
+
+
+export const fakeShipments = [
+  {
+    id: 'TRK-001',
+    descripcion: 'Documentos legales importantes',
+    tipo: 'Sobre',
+    origen: 'Caracas',
+    destino: 'Maracaibo',
+    estado: 'En tránsito',
+    peso: '0.5 kg',
+    alto: '2 cm',
+    ancho: '30 cm',
+    fecha: '2025-07-10',
+    oficina: 'Oficina Central Caracas',
+  },
+  {
+    id: 'TRK-002',
+    descripcion: 'Electrodoméstico mediano',
+    tipo: 'Caja',
+    origen: 'Valencia',
+    destino: 'Barquisimeto',
+    estado: 'Pendiente',
+    peso: '5 kg',
+    alto: '40 cm',
+    ancho: '35 cm',
+    fecha: '2025-07-11',
+    oficina: 'Sucursal Valencia Norte',
+  },
+  {
+    id: 'TRK-003',
+    descripcion: 'Libros escolares para primaria',
+    tipo: 'Caja',
+    origen: 'Mérida',
+    destino: 'San Cristóbal',
+    estado: 'Llegado',
+    peso: '3 kg',
+    alto: '25 cm',
+    ancho: '30 cm',
+    fecha: '2025-07-12',
+    oficina: 'Centro de Distribución Mérida',
+  }]
 
 const ITEMS_PER_PAGE = 5;
 

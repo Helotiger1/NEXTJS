@@ -28,9 +28,9 @@ export const formConfig: Field[] = [
         type: "email",
     },
     {
-        name: "contraseña",
+        name: "contrasena",
         label: "Contraseña",
-        type: "text",
+        type: "password",
     },
     {
         name: "rol",
@@ -43,8 +43,6 @@ export const formConfig: Field[] = [
         ],
     },
 ];
-
-
 
 
 export const initState: Usuario= {
@@ -81,7 +79,7 @@ export const getColumns = (
     key: "eliminar",
     label: "Eliminar",
     render: (_: any, row: any) => (
-      <button onClick={() => handleDelete(row.cedula)} className="text-blue-600 underline">
+      <button onClick={() => handleDelete(row.id)} className="text-blue-600 underline">
         Eliminar
       </button>
     ),

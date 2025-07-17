@@ -1,7 +1,7 @@
 // src/app/lib/Validaciones_Envios.ts
 
 export const estadosPermitidos = ['pendiente', 'enviado', 'entregado', 'cancelado'];
-export const tiposPermitidos = ['normal', 'urgente'];
+export const tiposPermitidos = ['barco', 'avion'];
 
 /**
  * Valida que un valor sea una fecha válida (string o Date).

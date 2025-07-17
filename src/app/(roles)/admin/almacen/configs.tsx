@@ -4,43 +4,43 @@ import { Field } from "@/app/(roles)/(shared)/components/forms/types";
 
 
 export const initState = {
-  linea1: "",
-  linea2: "",
-  pais: "",
-  estado: "",
-  ciudad: "",
-  codigoPostal: "",
-  telefono: "",
+  "direccion.linea1" : "",
+  "direccion.linea2": "",
+  "direccion.pais": "",
+  "direccion.estado": "",
+  "direccion.ciudad": "",
+  "direccion.codigoPostal": "",
+  "telefono": "",
 };
 
 export const formConfig: Field[] = [
     {
-        name: "linea1",
+        name: "direccion.linea1",
         label: "Linea 1",
         type: "text",
     },
     {
-        name: "linea2",
+        name: "direccion.linea2",
         label: "Linea 2",
         type: "text",
     },
     {
-        name: "pais",
+        name: "direccion.pais",
         label: "Pais",
         type: "text",
     },
     {
-        name: "estado",
+        name: "direccion.estado",
         label: "Estado",
         type: "text",
     },
     {
-        name: "ciudad",
+        name: "direccion.ciudad",
         label: "Ciudad",
         type: "text",
     },
     {
-        name: "codigoPostal",
+        name: "direccion.codigoPostal",
         label: "Codigo Postal",
         type: "text",
     },
@@ -58,12 +58,12 @@ export const getColumns: any = (
 ) => [
     { key: "codigo", label: "Código" },
     { key: "telefono", label: "Teléfono" },
-    { key: "linea1", label: "Dirección Línea 1" },
-    { key: "linea2", label: "Dirección Línea 2" },
-    { key: "pais", label: "País" },
-    { key: "estado", label: "Estado" },
-    { key: "ciudad", label: "Ciudad" },
-    { key: "codigoPostal", label: "Código Postal" },
+    { key: "direccion.linea1", label: "Dirección Línea 1" },
+    { key: "direccion.linea2", label: "Dirección Línea 2" },
+    { key: "direccion.pais", label: "País" },
+    { key: "direccion.estado", label: "Estado" },
+    { key: "direccion.ciudad", label: "Ciudad" },
+    { key: "direccion.codigoPostal", label: "Código Postal" },
     {
         key: "Editar",
         label: "Editar",

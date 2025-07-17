@@ -7,8 +7,9 @@ import { validarUsuario } from "@lib/Validaciones_Usuarios";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    console.log(body);
 
-    // Desempaquetar datos planos a estructura esperada
+    // Desempaquetar datos planos
     const datosTransformados = {
       cedula: body.cedula,
       nombre: body.nombre,
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
       rol: body.rol || Rol.CLIENTE, // Valor por defecto
     };
 
-    // 1. Validación básica de campos (usar datosTransformados)
+    // Validar campos primero (antes de verificar existencia)
     const errores = validarUsuario(datosTransformados);
     if (errores.length > 0) {
       return NextResponse.json(
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Verificar unicidad (cedula/email)
+    // Verificar existencia (cédula o email) en una sola consulta
     const usuarioExistente = await prisma.usuario.findFirst({
       where: {
         OR: [
@@ -40,29 +41,33 @@ export async function POST(req: NextRequest) {
           { email: datosTransformados.email },
         ],
       },
+      include: { roles: true },
     });
 
     if (usuarioExistente) {
-      const detallesError = [];
-      if (usuarioExistente.cedula === datosTransformados.cedula)
-        detallesError.push("La cédula ya está registrada");
-      if (usuarioExistente.email === datosTransformados.email)
-        detallesError.push("El email ya está registrado");
+      // Determinar qué campo causó el conflicto
+      const conflicto =
+        usuarioExistente.cedula === datosTransformados.cedula
+          ? "cedula"
+          : "email";
 
       return NextResponse.json(
         {
           success: false,
-          error: "Conflicto de datos",
-          details: detallesError,
+          error: `${conflicto} ya está registrado`,
+          data: {
+            id: usuarioExistente.id,
+            [conflicto]: usuarioExistente[conflicto],
+          },
         },
-        { status: 409 }
+        { status: 409 } // 409 para indicar conflicto
       );
     }
 
-    // 3. Hash de contraseña
+    // Hash de la contraseña
     const hashedPassword = await bcrypt.hash(datosTransformados.contrasena, 12);
 
-    // 4. Crear usuario con transacción
+    // Crear nuevo usuario
     const nuevoUsuario = await prisma.$transaction(async (tx) => {
       const usuario = await tx.usuario.create({
         data: {
@@ -85,10 +90,10 @@ export async function POST(req: NextRequest) {
       return usuario;
     });
 
-    // 5. Respuesta exitosa (sin datos sensibles)
     return NextResponse.json(
       {
         success: true,
+        message: "Usuario creado exitosamente",
         data: {
           id: nuevoUsuario.id,
           cedula: nuevoUsuario.cedula,
@@ -115,7 +120,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET - Obtener usuarios
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -142,7 +146,7 @@ export async function GET(req: NextRequest) {
       where.activo = activo === "true";
     }
 
-    // Filtro de búsqueda general (cedula, nombre, apellido, email)
+    // Filtro de búsqueda general
     if (search) {
       where.OR = [
         { cedula: { contains: search, mode: "insensitive" } },
@@ -173,8 +177,18 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    //Esta tambien esta rota de default, solo la comente, y la respuesta deje los usuarios no me sirve de nada lo demas
-    return NextResponse.json(usuarios);
+    // Transformar los resultados para devolver el rol como string
+    const usuariosTransformados = usuarios.map((usuario) => ({
+      ...usuario,
+      rol: usuario.roles[0]?.rol || null, // Tomamos el primer rol o null si no hay roles
+    }));
+
+    // Eliminamos el array roles del objeto final
+    const resultadoFinal = usuariosTransformados.map(
+      ({ roles, ...usuario }) => usuario
+    );
+
+    return NextResponse.json(resultadoFinal);
   } catch (error) {
     console.error("Error en GET /api/usuario:", error);
     return NextResponse.json(

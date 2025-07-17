@@ -5,6 +5,6 @@ import ShipmentsTable from './components/ShipmentsTable';
 
 export default function EnviosPage() {
   return (
-    <EnviosCliente></EnviosCliente>
+    <ShipmentsTable></ShipmentsTable>
   );
 }

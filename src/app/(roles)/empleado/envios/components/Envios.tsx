@@ -14,6 +14,6 @@ const initState: envioPayload = {
 
 
 export default function Envios() {
-  return(<DynamicCRUD<paquete, envioPayload>formConfig={formConfig} getColumns={getColumns}  service={envioService} initState={initState} checks={true} id='tracking'></DynamicCRUD>)
+  return(<DynamicCRUD<paquete, envioPayload>formConfig={formConfig} formName='Seleccione los datos del envio' h1Name={'Seleccione los paquetes a enviar'} getColumns={getColumns}  service={envioService} initState={initState} checks={true} id='tracking'></DynamicCRUD>)
 }
 

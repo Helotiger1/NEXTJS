@@ -29,6 +29,7 @@ export const formConfig: Field[] = [
 
 
 import { almacenService } from "@/app/services/almacenService";
+import { clienteService } from "@/app/services/clienteService";
 
 type Option = {
     value: string | number;
@@ -42,22 +43,36 @@ export async function getAlmacenes() {
 
 export function toOptions(data: any[]): Option[] {
     return data.map((item) => ({
-        value: item.codigo, // o cualquier identificador único
-        label: `${item.estado} - ${item.ciudad}`,
+        value: item.codigo,
+        label: `${item["direccion.pais"]} - ${item["direccion.estado"]} ID ${item["direccion.id"]}`,
     }));
 }
 
+
+export async function getClientes() {
+    const data = await clienteService.obtenerTodos();
+    return toOptionsClientes(data);
+}
+
+export function toOptionsClientes(data: any[]): Option[] {
+    return data.map((item) => ({
+        value: item.id, 
+        label: `${item["cedula"]} - ${item["nombre"]} ${item["apellido"]}`,
+    }));
+}
+
+
+
+
 export const getColumns: any = (handleCheck: (row: any, checked: boolean) => void, array: any, id :any ) => [
-  {key: "cedulaDueña", label: "Cedula dueña"},
     { key: "tracking", label: "Tracking" },
     { key: "descripcion", label: "Descripción" },
-    { key: "origen", label: "Origen" },
-    { key: "destino", label: "Destino" },
-    { key: "peso", label: "Peso" },
-    { key: "alto", label: "Alto" },
-    { key: "largo", label: "Largo" },
-    { key: "volumen", label: "Volumen" },
-    { key: "fecha", label: "Fecha" },
+    { key: "origen.direccion.estado", label: "Origen" },
+    { key: "destino.direccion.estado", label: "Destino" },
+    { key: "medidas.peso", label: "Peso" },
+    { key: "medidas.alto", label: "Alto" },
+    { key: "medidas.largo", label: "Largo" },
+    { key: "medidas.volumen", label: "Volumen" },
     {
         key: "seleccionado",
         label: "Seleccionar",

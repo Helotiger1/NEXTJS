@@ -1,38 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import {
-  validarFecha,
-  validarEstadoEnvio,
-  validarTipoEnvio,
-  validarNumeroPositivo,
-} from '@/app/lib/Validaciones_Envios';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/app/lib/prisma";
 
-const prisma = new PrismaClient();
-
-// Interfaz opcional para tipar el cuerpo de PUT
-interface EnvioBody {
-  tipo?: string;
-  estado?: string;
-  fechaSalida?: string;
-  fechaLlegada?: string;
-  almacenOrigen?: number;
-  almacenEnvio?: number;
-  paquetes?: number[];
+interface Params {
+  params: { numero: string };
 }
 
-// GET: Obtener un envío por su número
-export async function GET(_req: NextRequest, { params }: { params: { numero: string } }) {
+// GET /api/envios/[numero]
+export async function GET(request: Request, { params }: Params) {
   try {
-    const numero = parseInt(params.numero);
-    if (isNaN(numero)) {
-      return NextResponse.json({ error: 'Número de envío inválido' }, { status: 400 });
+    const numeroEnvio = parseInt(params.numero);
+    if (isNaN(numeroEnvio)) {
+      return NextResponse.json({ error: "Número de envío inválido" }, { status: 400 });
     }
 
     const envio = await prisma.envio.findUnique({
-      where: { numero },
+      where: { numero: numeroEnvio },
       include: {
         Origen: true,
         Envio: true,
+        empleado: true,
         detalleEnvio: {
           include: { paquete: true },
         },
@@ -41,153 +27,116 @@ export async function GET(_req: NextRequest, { params }: { params: { numero: str
     });
 
     if (!envio) {
-      return NextResponse.json({ error: 'Envío no encontrado' }, { status: 404 });
+      return NextResponse.json({ error: "Envío no encontrado" }, { status: 404 });
     }
 
     return NextResponse.json(envio);
   } catch (error) {
-    console.error('Error al obtener el envío:', error);
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+    console.error(error);
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }
 
-// PUT: Actualizar un envío por número
-export async function PUT(req: NextRequest, { params }: { params: { numero: string } }) {
+// PUT /api/envios/[numero]
+export async function PUT(req: NextRequest, { params }: Params) {
   try {
-    const numero = parseInt(params.numero);
-    if (isNaN(numero)) {
-      return NextResponse.json({ error: 'Número de envío inválido' }, { status: 400 });
+    const numeroEnvio = parseInt(params.numero);
+    if (isNaN(numeroEnvio)) {
+      return NextResponse.json({ error: "Número de envío inválido" }, { status: 400 });
     }
 
-    const body: EnvioBody = await req.json();
+    const {
+      tipo,
+      estado,
+      fechaSalida,
+      fechaLlegada,
+      almacenOrigen,
+      almacenEnvio,
+      empleadoCedula,
+      detalleEnvioPaquetes, // array de tracking de paquetes para actualizar
+    } = await req.json();
 
-    const envioExistente = await prisma.envio.findUnique({ where: { numero } });
+    let fechaSalidaDate, fechaLlegadaDate;
+    if (fechaSalida) fechaSalidaDate = new Date(fechaSalida);
+    if (fechaLlegada) fechaLlegadaDate = new Date(fechaLlegada);
+
+    if (fechaSalidaDate && fechaLlegadaDate && fechaSalidaDate >= fechaLlegadaDate) {
+      return NextResponse.json({ error: "La fecha de salida debe ser anterior a la fecha de llegada" }, { status: 400 });
+    }
+
+    const envioExistente = await prisma.envio.findUnique({ where: { numero: numeroEnvio } });
     if (!envioExistente) {
-      return NextResponse.json({ error: 'Envío no encontrado' }, { status: 404 });
+      return NextResponse.json({ error: "Envío no encontrado" }, { status: 404 });
     }
 
-    // Tipado explícito para evitar 'any'
-    const dataActualizar: Partial<{
-      tipo: string;
-      estado: string;
-      fechaSalida: Date;
-      fechaLlegada: Date;
-      almacenOrigen: number;
-      almacenEnvio: number;
-    }> = {};
-
-    // Validaciones y asignaciones
-    if (body.tipo) {
-      const error = validarTipoEnvio(body.tipo);
-      if (error) return NextResponse.json({ error }, { status: 400 });
-      dataActualizar.tipo = body.tipo.toLowerCase();
+    if (almacenOrigen) {
+      const almacenO = await prisma.almacen.findUnique({ where: { codigo: almacenOrigen } });
+      if (!almacenO) return NextResponse.json({ error: "Almacén origen no existe" }, { status: 404 });
+    }
+    if (almacenEnvio) {
+      const almacenD = await prisma.almacen.findUnique({ where: { codigo: almacenEnvio } });
+      if (!almacenD) return NextResponse.json({ error: "Almacén destino no existe" }, { status: 404 });
+    }
+    if (empleadoCedula) {
+      const empleado = await prisma.usuario.findUnique({ where: { id: empleadoCedula } });
+      if (!empleado) return NextResponse.json({ error: "Empleado no existe" }, { status: 404 });
     }
 
-    if (body.estado) {
-      const error = validarEstadoEnvio(body.estado);
-      if (error) return NextResponse.json({ error }, { status: 400 });
-      dataActualizar.estado = body.estado.toLowerCase();
-    }
-
-    if (body.fechaSalida) {
-      const error = validarFecha(body.fechaSalida, 'fechaSalida');
-      if (error) return NextResponse.json({ error }, { status: 400 });
-      dataActualizar.fechaSalida = new Date(body.fechaSalida);
-    }
-
-    if (body.fechaLlegada) {
-      const error = validarFecha(body.fechaLlegada, 'fechaLlegada');
-      if (error) return NextResponse.json({ error }, { status: 400 });
-      dataActualizar.fechaLlegada = new Date(body.fechaLlegada);
-    }
-
-    if (body.almacenOrigen) {
-      const error = validarNumeroPositivo(body.almacenOrigen, 'almacenOrigen');
-      if (error) return NextResponse.json({ error }, { status: 400 });
-
-      const origen = await prisma.almacen.findUnique({ where: { codigo: body.almacenOrigen } });
-      if (!origen) return NextResponse.json({ error: 'Almacén origen no existe' }, { status: 400 });
-
-      dataActualizar.almacenOrigen = body.almacenOrigen;
-    }
-
-    if (body.almacenEnvio) {
-      const error = validarNumeroPositivo(body.almacenEnvio, 'almacenEnvio');
-      if (error) return NextResponse.json({ error }, { status: 400 });
-
-      const destino = await prisma.almacen.findUnique({ where: { codigo: body.almacenEnvio } });
-      if (!destino) return NextResponse.json({ error: 'Almacén destino no existe' }, { status: 400 });
-
-      dataActualizar.almacenEnvio = body.almacenEnvio;
-    }
-
-    // Actualizar datos del envío
     const envioActualizado = await prisma.envio.update({
-      where: { numero },
-      data: dataActualizar,
+      where: { numero: numeroEnvio },
+      data: {
+        tipo: tipo ?? envioExistente.tipo,
+        estado: estado ?? envioExistente.estado,
+        fechaSalida: fechaSalidaDate ?? envioExistente.fechaSalida,
+        fechaLlegada: fechaLlegadaDate ?? envioExistente.fechaLlegada,
+        almacenOrigen: almacenOrigen ?? envioExistente.almacenOrigen,
+        almacenEnvio: almacenEnvio ?? envioExistente.almacenEnvio,
+        empleadoCedula: empleadoCedula ?? envioExistente.empleadoCedula,
+      },
     });
 
-    // Si vienen nuevos paquetes, actualizamos el detalleEnvio
-    if (body.paquetes && Array.isArray(body.paquetes)) {
-      if (
-        body.paquetes.length === 0 ||
-        !body.paquetes.every((t: number) => Number.isInteger(t) && t > 0)
-      ) {
-        return NextResponse.json({ error: 'El campo "paquetes" debe ser un arreglo de IDs válidos' }, { status: 400 });
+    if (Array.isArray(detalleEnvioPaquetes)) {
+      // Eliminar los detalles existentes
+      await prisma.detalleEnvio.deleteMany({ where: { envioNumero: numeroEnvio } });
+
+      // Insertar los nuevos detalles
+      for (const tracking of detalleEnvioPaquetes) {
+        const paquete = await prisma.paquete.findUnique({ where: { tracking } });
+        if (paquete) {
+          await prisma.detalleEnvio.create({
+            data: {
+              envioNumero: numeroEnvio,
+              paqueteTracking: tracking,
+            },
+          });
+        }
       }
-
-      const paquetesDB = await prisma.paquete.findMany({
-        where: { tracking: { in: body.paquetes } }
-      });
-
-      if (paquetesDB.length !== body.paquetes.length) {
-        return NextResponse.json({ error: 'Uno o más paquetes no existen' }, { status: 400 });
-      }
-
-      // Eliminar paquetes anteriores del envío
-      await prisma.detalleEnvio.deleteMany({ where: { envioNumero: numero } });
-
-      // Insertar los nuevos
-      await prisma.detalleEnvio.createMany({
-        data: body.paquetes.map(tracking => ({
-          envioNumero: numero,
-          paqueteTracking: tracking,
-        })),
-      });
     }
 
-    return NextResponse.json({
-      mensaje: 'Envío actualizado correctamente',
-      envio: envioActualizado,
-    });
-
+    return NextResponse.json(envioActualizado);
   } catch (error) {
-    console.error('Error actualizando envío:', error);
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+    console.error(error);
+    return NextResponse.json({ error: "Error interno al actualizar" }, { status: 500 });
   }
 }
 
-// DELETE: Eliminar un envío y sus relaciones
-export async function DELETE(_req: NextRequest, { params }: { params: { numero: string } }) {
+// DELETE /api/envios/[numero]
+export async function DELETE(request: Request, { params }: Params) {
   try {
-    const numero = parseInt(params.numero);
-    if (isNaN(numero)) {
-      return NextResponse.json({ error: 'Número de envío inválido' }, { status: 400 });
+    const numeroEnvio = parseInt(params.numero);
+    if (isNaN(numeroEnvio)) {
+      return NextResponse.json({ error: "Número de envío inválido" }, { status: 400 });
     }
 
-    const envio = await prisma.envio.findUnique({ where: { numero } });
-    if (!envio) {
-      return NextResponse.json({ error: 'Envío no encontrado' }, { status: 404 });
-    }
+    // Eliminar detalles para evitar error de FK
+    await prisma.detalleEnvio.deleteMany({ where: { envioNumero: numeroEnvio } });
 
-    // Eliminar relaciones antes de eliminar el envío
-    await prisma.detalleEnvio.deleteMany({ where: { envioNumero: numero } });
+    // Eliminar el envío
+    await prisma.envio.delete({ where: { numero: numeroEnvio } });
 
-    await prisma.envio.delete({ where: { numero } });
-
-    return NextResponse.json({ mensaje: 'Envío eliminado correctamente' });
+    return NextResponse.json({ message: "Envío eliminado correctamente" });
   } catch (error) {
-    console.error('Error eliminando envío:', error);
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+    console.error(error);
+    return NextResponse.json({ error: "Error interno al eliminar" }, { status: 500 });
   }
 }

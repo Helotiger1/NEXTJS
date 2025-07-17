@@ -77,10 +77,16 @@ enum EstadoPaquete {
   CANCELADO
 }
 
+enum TipoEnvio {
+  BARCO
+  AVION
+}
+
 model Paquete {
   tracking             Int           @id @default(autoincrement())
   descripcion          String
   estado               EstadoPaquete
+  tipoEnvio            TipoEnvio     @default(AVION)
   almacenCodigo        Int
   empleadoId           Int
   medidasId            Int           @unique
@@ -105,11 +111,11 @@ model Paquete {
 
 model Medidas {
   id      Int @id @default(autoincrement())
-  largo   Int
-  ancho   Int
-  alto    Int
-  peso    Int
-  volumen Int
+  largo   Float
+  ancho   Float
+  alto    Float
+  peso    Float
+  volumen Float
 
   paquete Paquete?
 }
@@ -121,8 +127,8 @@ model Envio {
   fechaSalida  DateTime
   fechaLlegada DateTime
 
-  almacenOrigen Int @unique
-  almacenEnvio  Int @unique
+  almacenOrigen Int 
+  almacenEnvio  Int 
 
   empleadoCedula Int
 
@@ -132,7 +138,7 @@ model Envio {
   empleado Usuario @relation("EnviosRealizados", fields: [empleadoCedula], references: [id])
 
   detalleEnvio DetalleEnvio[]
-  facturas     Factura[]
+  facturas     Factura?
 }
 
 model DetalleEnvio {
@@ -150,7 +156,7 @@ model Factura {
   monto         Float
   metodoPago    String
   cantPiezas    Int
-  envioNumero   Int    @unique
+  envioNumero   Int   @unique
   clienteCedula Int
 
   envioNum Envio   @relation(fields: [envioNumero], references: [numero])

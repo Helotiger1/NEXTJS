@@ -12,6 +12,13 @@ export interface CrudService<TData, TResult> {
   eliminar: (id: string) => Promise<void>;
 }
 
+type ApiResponse<T> = {
+  success: boolean;
+  data: T;
+};
+
+
+
 export function createCrudService<TData, TResult = TData>(
   baseUrl: string
 ): CrudService<TData, TResult> {
@@ -36,22 +43,20 @@ export function createCrudService<TData, TResult = TData>(
   };
 }
 
-export function manejarError(error: unknown): never {
+export function manejarError(error: unknown) {
+  let mensaje = "Error inesperado";
+
   if (axios.isAxiosError(error)) {
     if (error.response) {
-      const mensaje =
-        error.response.data?.error || "Error en la respuesta del servidor";
+      mensaje = error.response.data?.error || "Error en la respuesta del servidor";
       console.error("Error respuesta API:", error.response.status, mensaje);
-      throw new Error(mensaje);
-    } else if (error.request) {
-      console.error("No se recibió respuesta del servidor", error.request);
-      throw new Error("No se recibió respuesta del servidor");
     } else {
+      mensaje = `Error en la petición: ${error.message}`;
       console.error("Error en configuración de petición:", error.message);
-      throw new Error(`Error en la petición: ${error.message}`);
     }
   } else {
     console.error("Error inesperado:", error);
-    throw new Error("Error inesperado");
   }
+
+  alert(mensaje);
 }

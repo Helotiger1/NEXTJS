@@ -3,7 +3,9 @@ import prisma from "@/app/lib/prisma";
 import { convertirNumeros } from "@/app/lib/axios";
 import { Prisma, EstadoPaquete } from "@prisma/client";
 import { validarEstadoPaqueteString } from "@/app/lib/Validaciones_Paquetes";
-
+import {
+  calcularPrecioEnvio, calcularPieCubico, generarFactura, } from "@lib/Logica_Negocio";
+  
 // POST: Registrar un nuevo envío
 export async function POST(req: NextRequest) {
   try {
@@ -15,14 +17,15 @@ export async function POST(req: NextRequest) {
     const {
       tipo,
       almacenOrigen,
-      almacenEnvio
+      almacenEnvio,
     } = bodyConvertido;
 
-    const userId = req.headers.get('userId');
+    const userId = req.headers.get("userId");
     const empleadoCedula = userId ? Number(userId) : null;
-    const estado = 'EN TRANSITO';
+    const estado = "EN_TRANSITO";
     const fechaSalida = new Date();
-    const fechaLlegada = new Date();
+    // Ejemplo: fecha llegada 3 días después
+    const fechaLlegada = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
 
     if (!["BARCO", "AVION"].includes(tipo)) {
       return NextResponse.json(
@@ -33,14 +36,20 @@ export async function POST(req: NextRequest) {
 
     if (almacenOrigen === almacenEnvio) {
       return NextResponse.json(
-        { success: false, error: "El almacén origen y destino no pueden ser iguales" },
+        {
+          success: false,
+          error: "El almacén origen y destino no pueden ser iguales",
+        },
         { status: 400 }
       );
     }
 
     if (!Array.isArray(paquetes) || paquetes.length === 0) {
       return NextResponse.json(
-        { success: false, error: "Debe seleccionar al menos un paquete" },
+        {
+          success: false,
+          error: "Debe seleccionar al menos un paquete",
+        },
         { status: 400 }
       );
     }
@@ -59,19 +68,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 🛑 Validar que todos los paquetes estén en estado REGISTRADO
+    // Validar estados de paquetes
     const trackings = paquetes.map((p: any) => p.tracking);
     const paquetesDB = await prisma.paquete.findMany({
       where: { tracking: { in: trackings } },
-      select: { tracking: true, estado: true }
+      select: {
+        tracking: true,
+        estado: true,
+        clienteOrigenId: true,
+        tipoEnvio: true,
+        medidas: {
+          select: { largo: true, ancho: true, alto: true, peso: true },
+        },
+      },
     });
 
     const paquetesInvalidos = paquetesDB.filter(
-      (p) => p.estado !== 'REGISTRADO'
+      (p) => p.estado !== "REGISTRADO"
     );
 
     if (paquetesInvalidos.length > 0) {
-      const detalles = paquetesInvalidos.map(p => `📦 ${p.tracking} → estado: ${p.estado}`);
+      const detalles = paquetesInvalidos.map(
+        (p) => `📦 ${p.tracking} → estado: ${p.estado}`
+      );
       return NextResponse.json(
         {
           success: false,
@@ -82,7 +101,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ✅ Crear el envío
+    // Crear el envío
     const nuevoEnvio = await prisma.envio.create({
       data: {
         tipo,
@@ -103,11 +122,76 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // ✅ Actualizar estado de los paquetes a EN_TRANSITO
+    // Actualizar estado paquetes a EN_TRANSITO
     await prisma.paquete.updateMany({
       where: { tracking: { in: trackings } },
-      data: { estado: 'EN_TRANSITO' }
+      data: { estado: "EN_TRANSITO" },
     });
+
+    // Agrupar paquetes por cliente para generar facturas
+    type PaqueteParaFactura = {
+      tracking: number;
+      pesoLb: number;
+      pieCubico: number;
+      tipoEnvio: "AVION" | "BARCO";
+    };
+
+    // Mapear y agrupar por clienteOrigenId
+    const paquetesPorCliente: Record<number, PaqueteParaFactura[]> = {};
+
+    for (const p of paquetesDB) {
+      const pesoLb = p.medidas.peso; // ya en libras asumo
+      const pieCubico = calcularPieCubico(
+        p.medidas.largo,
+        p.medidas.ancho,
+        p.medidas.alto
+      );
+
+      // El enum TipoEnvio en Prisma es mayúscula, negocio usa minus
+      const tipoStr = p.tipoEnvio === "AVION" ? "AVION" : "BARCO";
+
+      const paqueteFactura: PaqueteParaFactura = {
+        tracking: p.tracking,
+        pesoLb,
+        pieCubico,
+        tipoEnvio: tipoStr,
+      };
+
+      if (!paquetesPorCliente[p.clienteOrigenId]) {
+        paquetesPorCliente[p.clienteOrigenId] = [];
+      }
+      paquetesPorCliente[p.clienteOrigenId].push(paqueteFactura);
+    }
+
+    // Para cada cliente, generar factura y detalles
+    for (const clienteIdStr in paquetesPorCliente) {
+      const clienteId = Number(clienteIdStr);
+      const paquetesCliente = paquetesPorCliente[clienteId];
+
+      // Generar la factura (calcula total y items)
+      const paquetesClienteMapped = paquetesCliente.map((p) => ({
+        ...p,
+        tipoEnvio: p.tipoEnvio as "AVION" | "BARCO",
+      }));
+      const { total, items } = generarFactura(paquetesClienteMapped);
+
+      // Crear factura en DB
+      const facturaCreada = await prisma.factura.create({
+        data: {
+          estado: "PENDIENTE",
+          monto: total,
+          metodoPago: "POR DEFINIR",
+          cantPiezas: items.length,
+          envioNumero: nuevoEnvio.numero,
+          clienteCedula: clienteId,
+          detalleFactura: {
+            create: items.map((it) => ({
+              paqueteTracking: it.tracking,
+            })),
+          },
+        },
+      });
+    }
 
     return NextResponse.json(
       { success: true, data: nuevoEnvio },
@@ -119,12 +203,14 @@ export async function POST(req: NextRequest) {
       {
         success: false,
         error: "Error al registrar el envío",
-        details: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+        details:
+          process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
       },
       { status: 500 }
     );
   }
 }
+
 
 export async function GET(req: NextRequest) {
     try {

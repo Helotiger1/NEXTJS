@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
       tracking: p.tracking,
       pesoLb: p.medidas.peso,
       pieCubico: parseFloat((p.medidas.volumen / 1728).toFixed(2)),
-      tipoEnvio: (envio.tipo.toLowerCase() === "barco" ? "barco" : "avion") as "barco" | "avion",
+      tipoEnvio: (envio.tipo.toUpperCase() === "" ? "BARCO" : "AVION") as "BARCO" | "AVION",
     }));
 
     const facturaGenerada = generarFactura(paquetesParaFactura);

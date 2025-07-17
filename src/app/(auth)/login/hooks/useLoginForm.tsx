@@ -2,23 +2,25 @@
 
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { loginService } from '@/app/services/loginService';
 
 export function useLoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams(); // <- aquí accedes a los parámetros de la URL
-
-  const tipo = searchParams.get('tipo'); // <- esto te da "empleado", "cliente", etc.
+  const searchParams = useSearchParams();
+  const tipo = searchParams.get('tipo');
 
   const [form, setForm] = useState({
     email: '',
     password: '',
   });
 
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!form.email || !form.password) {
@@ -26,19 +28,28 @@ export function useLoginForm() {
       return;
     }
 
-    const user = {
-      nombre: 'Juan Pérez',
-      rol: tipo || 'cliente', // ← usa el tipo de la URL como rol
-      id : 2
-    };
+    try {
+      setLoading(true);
+      const usuario = await loginService({
+        email: form.email,
+        contraseña: form.password,
+      });
 
-    localStorage.setItem('user', JSON.stringify(user));
-    router.push(`/${tipo || 'cliente'}/inicio`); // ← redirige al tipo adecuado
+      localStorage.setItem('user', JSON.stringify(usuario));
+      console.log(usuario);
+      console.log(`/${tipo || 'cliente'}/inicio`)
+      router.push(`/${tipo || 'cliente'}/inicio`);
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return {
     form,
     handleChange,
     handleSubmit,
+    loading,
   };
 }

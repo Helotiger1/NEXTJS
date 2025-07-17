@@ -15,12 +15,10 @@ export default function UnauthorizedPage() {
             No tienes permisos para acceder a esta página. Por favor, vuelve a iniciar sesión con una cuenta autorizada.
           </p>
 
-          <Link
-            href="/login"
-            className="inline-block w-full rounded-md bg-purple-700 py-2 text-white font-semibold hover:bg-purple-800 transition"
-          >
-            Volver al login
-          </Link>
+
+                    <button   className="inline-block w-full rounded-md bg-purple-700 py-2 text-white font-semibold hover:bg-purple-800 transition" onClick={() => history.back()}>
+  Volver atrás
+</button>
         </div>
       </div>
     </div>

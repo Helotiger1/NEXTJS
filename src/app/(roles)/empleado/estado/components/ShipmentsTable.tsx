@@ -6,7 +6,7 @@ import { getColumns } from "../configs";
 import { envioEstadoService } from "@/app/services/enviosEstadoService";
 
 export const ShipmentsTable = () => {
-    const id = "cod";
+    const id = "numero";
     const { data, loading, error, updater } = useCRUDForm(envioEstadoService);
 
     const onChange = async (row: any, nuevoEstado: string) => {
@@ -20,6 +20,7 @@ export const ShipmentsTable = () => {
             console.log(row);
             await envioEstadoService.actualizar(row[id], row);
             alert("Estado actualizado correctamente.");
+            updater();
         } catch (err) {
             alert("Hubo un error al actualizar el estado.");
             console.error(err);
@@ -33,5 +34,5 @@ export const ShipmentsTable = () => {
     if (loading) return <p>Cargando...</p>;
     if (error) return <p>Error al cargar</p>;
     console.log(data);
-    return <DynamicTable data={data} columns={columns} rowsPerPage={2} />;
+    return <DynamicTable data={data} columns={columns} rowsPerPage={8} />;
 };

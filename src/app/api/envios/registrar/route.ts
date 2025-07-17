@@ -1,20 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/prisma";
+import { convertirNumeros } from "@/app/lib/axios";
 
 
 // POST: Registrar un nuevo envío
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
+        const body2 = convertirNumeros(body)
         const {
             tipo,
             almacenOrigen,
             almacenEnvio,
             paquetes
-        } = body;
+        } = body2;
 
 
-        const empleadoCedula = 4;
+
+        const empleadoCedula = 2;
         const estado = 'REGISTRADO';
         const fechaSalida = new Date();
         const fechaLlegada = new Date();
@@ -42,7 +45,7 @@ export async function POST(req: NextRequest) {
         // Validar existencia de almacenes y empleado
         const [origen, destino, empleado] = await Promise.all([
             prisma.almacen.findUnique({ where: { codigo: almacenOrigen } }),
-            prisma.almacen.findUnique({ where: { codigo: almacenEnvio } }),
+            prisma.almacen.findUnique({ where: { codigo: almacenEnvio} }),
             prisma.usuario.findUnique({ where: {id : empleadoCedula} }),
         ]);
 

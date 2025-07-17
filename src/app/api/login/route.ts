@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/app/lib/prisma';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import { SignJWT } from 'jose';
 import { serialize } from 'cookie';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'clave_super_secreta';
@@ -50,25 +50,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Extraer roles como array de strings
-    const roles = usuario.roles.map(r => r.rol);
+    const rol = usuario.roles[0].rol;
 
-    const token = jwt.sign(
-      {
-        userId: usuario.id,
-        cedula: usuario.cedula,
-        email: usuario.email,
-        roles, // Aquí roles en array
-      },
-      JWT_SECRET,
-      { expiresIn: '1h' }
-    );
+    // Crear token con jose
+    const alg = 'HS256';
+    const secret = new TextEncoder().encode(JWT_SECRET);
+
+    const token = await new SignJWT({
+      userId: usuario.id,
+      cedula: usuario.cedula,
+      email: usuario.email,
+      rol,
+    })
+      .setProtectedHeader({ alg })
+      .setExpirationTime('1h')
+      .sign(secret);
 
     // Crear cookie HttpOnly con el token
     const cookie = serialize('token', token, {
       httpOnly: true,
       path: '/',
-      maxAge: 60 * 60, // 1 hora
+      maxAge: 60 * 60,
       sameSite: 'strict',
       secure: process.env.NODE_ENV === 'production',
     });
@@ -82,7 +84,7 @@ export async function POST(req: NextRequest) {
           apellido: usuario.apellido,
           email: usuario.email,
           telefono: usuario.telefono,
-          roles,
+          rol,
         },
         mensaje: 'Inicio de sesión exitoso.',
       },

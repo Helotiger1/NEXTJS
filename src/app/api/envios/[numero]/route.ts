@@ -40,11 +40,7 @@ export async function GET(request: Request, { params }: Params) {
 // PUT /api/envios/[numero]
 export async function PUT(req: NextRequest, { params }: Params) {
   try {
-    const numeroEnvio = parseInt(params.numero);
-    if (isNaN(numeroEnvio)) {
-      return NextResponse.json({ error: "Número de envío inválido" }, { status: 400 });
-    }
-
+    const body = await req.json();
     const {
       tipo,
       estado,
@@ -54,7 +50,8 @@ export async function PUT(req: NextRequest, { params }: Params) {
       almacenEnvio,
       empleadoCedula,
       detalleEnvioPaquetes, // array de tracking de paquetes para actualizar
-    } = await req.json();
+    } = body
+        console.log(params,body);
 
     let fechaSalidaDate, fechaLlegadaDate;
     if (fechaSalida) fechaSalidaDate = new Date(fechaSalida);

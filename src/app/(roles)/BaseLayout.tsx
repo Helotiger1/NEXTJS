@@ -24,6 +24,13 @@ export function BaseLayout({
   const router = useRouter();
   const pathname = usePathname();
 
+
+   const handleLogout = async () => {
+    await fetch('/api/logout', { method: 'POST' });
+    // Aquí si usas algo como localStorage para usuario, limpia también:
+    localStorage.removeItem('user');
+    router.push('/');
+  };
   return (
     <div className="grid grid-cols-[16rem_1fr] min-h-screen bg-black text-white relative">
       {/* Sidebar */}
@@ -68,10 +75,7 @@ export function BaseLayout({
 
         {/* Botón cerrar sesión */}
         <button
-          onClick={() => {
-            sessionStorage.removeItem('bienvenida-mostrada');
-            router.push('/');
-          }}
+          onClick={handleLogout}
           className="mt-auto flex items-center gap-2 px-4 py-2 rounded-md text-white bg-black hover:bg-red-700 transition"
         >
           <LogOut className="h-5 w-5" />

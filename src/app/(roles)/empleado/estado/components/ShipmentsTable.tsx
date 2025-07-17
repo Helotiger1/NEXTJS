@@ -34,5 +34,5 @@ export const ShipmentsTable = () => {
     if (loading) return <p>Cargando...</p>;
     if (error) return <p>Error al cargar</p>;
     console.log(data);
-    return <DynamicTable data={data} columns={columns} rowsPerPage={8} />;
+    return <DynamicTable name="Actualizar estado." data={data} columns={columns} rowsPerPage={8} />;
 };

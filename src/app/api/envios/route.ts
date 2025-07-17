@@ -49,26 +49,30 @@ export async function GET(req: NextRequest) {
         where.fechaSalida.lte = new Date(fechaSalidaHastaStr);
     }
 
-    const envios = await prisma.envio.findMany({
-      where,
+   const envios = await prisma.envio.findMany({
+  where,
+  orderBy: {
+    estado: "desc", // "EN_TRANSITO" aparecerá primero
+  },
+  include: {
+    Origen: {
       include: {
-        Origen: {
-          include: {
-            direccion: true,
-          },
-        },
-        Envio: {
-          include: {
-            direccion: true,
-          },
-        },
-        empleado: true,
-        detalleEnvio: {
-          include: { paquete: true },
-        },
-        facturas: true,
+        direccion: true,
       },
-    });
+    },
+    Envio: {
+      include: {
+        direccion: true,
+      },
+    },
+    empleado: true,
+    detalleEnvio: {
+      include: { paquete: true },
+    },
+    facturas: true,
+  },
+});
+
 
     return NextResponse.json(envios);
   } catch (error) {

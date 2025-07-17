@@ -10,13 +10,22 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     const paquetes = body.paquetes;
-    const bodyConvertido = convertirNumeros(body);
+const bodyConvertido = convertirNumeros(body);
+const { tipo, almacenOrigen, almacenEnvio } = bodyConvertido;
 
-    const {
-      tipo,
-      almacenOrigen,
-      almacenEnvio
-    } = bodyConvertido;
+const todosCoinciden = paquetes.every(
+  (paquete: any) => paquete.tipoEnvio === tipo
+);
+
+if (!todosCoinciden) {
+  return NextResponse.json(
+    {
+      success: false,
+      error: "Todos los paquetes deben tener el mismo tipo de envío que el especificado.",
+    },
+    { status: 400 }
+  );
+}
 
     const userId = req.headers.get('userId');
     const empleadoCedula = userId ? Number(userId) : null;

@@ -71,22 +71,32 @@ export default function DynamicTable<T extends object>({
                 </thead>
 
                 <tbody className="bg-white">
-                    {paginatedData.map((row, idx) => (
-                        <tr
-                            key={idx}
-                            className="border-b hover:bg-gray-50 transition-all">
-                            {columns.map((col) => (
-                                <td
-                                    key={String(col.key)}
-                                    className="px-4 py-3 text-left truncate">
-                                    {col.render
-                                        ? col.render((row as any)[col.key], row)
-                                        : String((row as any)[col.key] ?? "")}
-                                </td>
-                            ))}
-                        </tr>
-                    ))}
-                </tbody>
+    {paginatedData.length > 0 ? (
+        paginatedData.map((row, idx) => (
+            <tr
+                key={idx}
+                className="border-b hover:bg-gray-50 transition-all">
+                {columns.map((col) => (
+                    <td
+                        key={String(col.key)}
+                        className="px-4 py-3 text-left truncate">
+                        {col.render
+                            ? col.render((row as any)[col.key], row)
+                            : String((row as any)[col.key] ?? "")}
+                    </td>
+                ))}
+            </tr>
+        ))
+    ) : (
+        <tr>
+            <td
+                colSpan={columns.length}
+                className="px-4 py-6 text-center text-gray-500 italic">
+                No hay datos para mostrar. Intenta ajustar los filtros o busca algo diferente.
+            </td>
+        </tr>
+    )}
+</tbody>
             </table>
 
             {data.length > rowsPerPage && (

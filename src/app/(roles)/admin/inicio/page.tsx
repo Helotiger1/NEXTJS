@@ -13,7 +13,7 @@ export default function AdminInicioPage() {
       transition={{ duration: 0.1, ease: 'easeOut' }}
     >
       <h1 className="text-4xl font-bold tracking-tight mb-2">
-        ¡Bienvenido, <span className="text-yellow-400">Administrador</span>!
+        ¡Bienvenido a <span className="text-yellow-400">Administrador</span>!
       </h1>
       <p className="text-gray-300 text-lg mb-6">
         Panel de gestión del sistema

@@ -66,6 +66,7 @@ export function toOptionsClientes(data: any[]): Option[] {
 
 export const getColumns: any = (handleCheck: (row: any, checked: boolean) => void, array: any, id :any ) => [
     { key: "tracking", label: "Tracking" },
+    { key: "tipoEnvio", label: "Tipo" },
     { key: "descripcion", label: "Descripción" },
     { key: "origen.direccion.estado", label: "Origen" },
     { key: "destino.direccion.estado", label: "Destino" },

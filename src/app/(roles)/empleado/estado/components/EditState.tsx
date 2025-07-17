@@ -19,10 +19,7 @@ export const EditState: React.FC<EstadoEditableProps> = ({
     setEditing(false);
   };
 
-  const opciones=[
-        "EN TRANSITO",
-        "EN ALMACEN",
-      ]
+  const opciones = ["EN TRANSITO", "EN ALMACEN"];
 
   return editing ? (
     <select
@@ -39,8 +36,16 @@ export const EditState: React.FC<EstadoEditableProps> = ({
     </select>
   ) : (
     <button
-      onClick={() => setEditing(true)}
-      className="border rounded p-1 text-blue-600 underline"
+      onClick={() => {
+        if (estado !== "EN ALMACEN") {
+          setEditing(true);
+        }
+      }}
+      className={`border rounded p-1 ${
+        estado === "EN ALMACEN"
+          ? "text-gray-500 cursor-not-allowed"
+          : "text-blue-600 underline"
+      }`}
     >
       {estado || "Ver detalles"}
     </button>

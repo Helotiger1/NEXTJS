@@ -30,15 +30,17 @@ export function useLoginForm() {
 
     try {
       setLoading(true);
+
       const usuario = await loginService({
         email: form.email,
         contraseña: form.password,
       });
 
       localStorage.setItem('user', JSON.stringify(usuario));
-      console.log(usuario);
-      console.log(`/${tipo || 'cliente'}/inicio`)
-      router.push(`/${tipo || 'cliente'}/inicio`);
+
+      const destino = `/${tipo || usuario.rol.toLowerCase()}/inicio`;
+      console.log(destino);
+      router.push(destino);
     } catch (error: any) {
       alert(error.message);
     } finally {

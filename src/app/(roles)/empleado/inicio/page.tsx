@@ -19,7 +19,7 @@ export default function EmpleadoInicioPage() {
     >
       {/* Bienvenida */}
       <h1 className="text-4xl font-bold tracking-tight mb-2">
-        ¡Bienvenido, <span className="text-purple-400">Empleado</span>!
+        ¡Bienvenido a <span className="text-purple-400">Empleado</span>!
       </h1>
       <p className="text-gray-300 text-lg mb-6">
         Panel de control de tus actividades diarias

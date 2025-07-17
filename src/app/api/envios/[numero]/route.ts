@@ -62,17 +62,44 @@ export async function PUT(req: NextRequest, { params }: Params) {
       },
     });
     console.log(detalleEnvio)
+    
 
-    if (estado === "EN ALMACEN" && Array.isArray(detalleEnvio)) {
+   
+
+
+
+
+
+
+if (Array.isArray(detalleEnvio)) {
   await Promise.all(
-    detalleEnvio.map((detalle: any) =>
-      prisma.paquete.update({
-        where: { tracking: detalle.paquete.tracking },
-        data: { estado: "REGISTRADO" },
-      })
-    )
+    detalleEnvio.map((detalle: any) => {
+      const tracking = detalle.paquete.tracking;
+      const destinoId = detalle.paquete.destinoId;
+
+      console.log("📦 Revisando paquete:", tracking, "Destino:", destinoId, "Almacén actual:", almacenEnvio);
+
+      // Si el paquete llegó a su destino final, marcar como "EN_ALMACEN"
+      if (almacenEnvio === destinoId) {
+        return prisma.paquete.update({
+          where: { tracking },
+          data: { estado: "EN_ALMACEN" },
+        });
+      }
+
+      // Si el estado general es "EN ALMACEN", marcar como "REGISTRADO"
+      if (estado === "EN ALMACEN") {
+        return prisma.paquete.update({
+          where: { tracking },
+          data: { estado: "REGISTRADO" },
+        });
+      }
+
+      return Promise.resolve();
+    })
   );
 }
+
 
 
     return NextResponse.json({ success: true, data: envioActualizado });

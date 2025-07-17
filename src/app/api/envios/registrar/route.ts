@@ -4,8 +4,11 @@ import { convertirNumeros } from "@/app/lib/axios";
 import { Prisma, EstadoPaquete } from "@prisma/client";
 import { validarEstadoPaqueteString } from "@/app/lib/Validaciones_Paquetes";
 import {
-  calcularPrecioEnvio, calcularPieCubico, generarFactura, } from "@lib/Logica_Negocio";
-  
+  calcularPrecioEnvio,
+  calcularPieCubico,
+  generarFactura,
+} from "@lib/Logica_Negocio";
+
 // POST: Registrar un nuevo envío
 export async function POST(req: NextRequest) {
   try {
@@ -28,13 +31,18 @@ if (!todosCoinciden) {
     { status: 400 }
   );
 }
-
     const userId = req.headers.get("userId");
     const empleadoCedula = userId ? Number(userId) : null;
     const estado = "EN_TRANSITO";
-    const fechaSalida = new Date();
-    // Ejemplo: fecha llegada 3 días después
-    const fechaLlegada = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+    function formatearFechaLocal(fecha: Date): string {
+      const yyyy = fecha.getFullYear();
+      const mm = String(fecha.getMonth() + 1).padStart(2, "0");
+      const dd = String(fecha.getDate()).padStart(2, "0");
+      return `${yyyy}/${mm}/${dd}`;
+    }
+
+    const fechaSalida = formatearFechaLocal(new Date());
+    const fechaLlegada = formatearFechaLocal(new Date(new Date().setDate(new Date().getDate() + 3)));
 
     if (!["BARCO", "AVION"].includes(tipo)) {
       return NextResponse.json(
@@ -213,172 +221,173 @@ if (!todosCoinciden) {
         success: false,
         error: "Error al registrar el envío",
         details:
-          process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+          process.env.NODE_ENV === "development"
+            ? (error as Error).message
+            : undefined,
       },
       { status: 500 }
     );
   }
 }
 
-
 export async function GET(req: NextRequest) {
-    try {
-        const { searchParams } = new URL(req.url);
-        const estado = "REGISTRADO";
+  try {
+    const { searchParams } = new URL(req.url);
+    const estado = "REGISTRADO";
 
-        const where: Prisma.PaqueteWhereInput = {};
+    const where: Prisma.PaqueteWhereInput = {};
 
-        if (estado ) {
-            where.estado = estado
-        }
+    if (estado) {
+      where.estado = estado;
+    }
 
-        const paquetes = await prisma.paquete.findMany({
-            where,
-            include: {
-                almacen: {
-                    include: {
-                        direccion: true,
-                    },
+    const paquetes = await prisma.paquete.findMany({
+      where,
+      include: {
+        almacen: {
+          include: {
+            direccion: true,
+          },
+        },
+        empleado: {
+          select: {
+            id: true,
+            cedula: true,
+            nombre: true,
+            apellido: true,
+            email: true,
+            telefono: true,
+            roles: {
+              select: {
+                rol: true,
+              },
+            },
+          },
+        },
+        origen: {
+          include: {
+            direccion: true,
+          },
+        },
+        destino: {
+          include: {
+            direccion: true,
+          },
+        },
+        medidas: true,
+        clienteOrigen: {
+          select: {
+            id: true,
+            cedula: true,
+            nombre: true,
+            apellido: true,
+            email: true,
+            telefono: true,
+          },
+        },
+        clienteDestino: {
+          select: {
+            id: true,
+            cedula: true,
+            nombre: true,
+            apellido: true,
+            email: true,
+            telefono: true,
+          },
+        },
+        detalleEnvio: {
+          include: {
+            envio: {
+              include: {
+                Origen: {
+                  include: {
+                    direccion: true,
+                  },
+                },
+                Envio: {
+                  include: {
+                    direccion: true,
+                  },
                 },
                 empleado: {
-                    select: {
-                        id: true,
-                        cedula: true,
-                        nombre: true,
-                        apellido: true,
-                        email: true,
-                        telefono: true,
-                        roles: {
-                            select: {
-                                rol: true,
-                            },
-                        },
-                    },
+                  select: {
+                    nombre: true,
+                    apellido: true,
+                  },
                 },
-                origen: {
-                    include: {
-                        direccion: true,
-                    },
-                },
-                destino: {
-                    include: {
-                        direccion: true,
-                    },
-                },
-                medidas: true,
-                clienteOrigen: {
-                    select: {
-                        id: true,
-                        cedula: true,
-                        nombre: true,
-                        apellido: true,
-                        email: true,
-                        telefono: true,
-                    },
-                },
-                clienteDestino: {
-                    select: {
-                        id: true,
-                        cedula: true,
-                        nombre: true,
-                        apellido: true,
-                        email: true,
-                        telefono: true,
-                    },
-                },
-                detalleEnvio: {
-                    include: {
-                        envio: {
-                            include: {
-                                Origen: {
-                                    include: {
-                                        direccion: true,
-                                    },
-                                },
-                                Envio: {
-                                    include: {
-                                        direccion: true,
-                                    },
-                                },
-                                empleado: {
-                                    select: {
-                                        nombre: true,
-                                        apellido: true,
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    orderBy: {
-                        envio: {
-                            fechaSalida: "asc",
-                        },
-                    },
-                },
-                detalleFactura: {
-                    include: {
-                        factura: {
-                            include: {
-                                cliente: true,
-                            },
-                        },
-                    },
-                },
+              },
             },
-        });
-
-        const paquetesEnriquecidos = paquetes.map((paquete) => {
-            let diasTransito = null;
-            let envioActual = null;
-
-            if (paquete.detalleEnvio.length > 0) {
-                envioActual = paquete.detalleEnvio[0].envio;
-
-                if (envioActual?.fechaSalida) {
-                    const fechaSalida = new Date(envioActual.fechaSalida);
-                    diasTransito = Math.floor(
-                        (Date.now() - fechaSalida.getTime()) / (1000 * 60 * 60 * 24)
-                    );
-                }
-            }
-
-            let tarifaEstimada = null;
-            if (envioActual) {
-                const volumenPiesCubicos =
-                    (paquete.medidas.largo *
-                        paquete.medidas.ancho *
-                        paquete.medidas.alto) /
-                    1728;
-
-                if (envioActual.tipo === "MARITIMO") {
-                    tarifaEstimada = Math.max(volumenPiesCubicos * 25, 35);
-                } else if (envioActual.tipo === "AEREO") {
-                    const porPeso = paquete.medidas.peso * 7;
-                    const porVolumen = volumenPiesCubicos * 7;
-                    tarifaEstimada = Math.max(Math.max(porPeso, porVolumen), 45);
-                }
-            }
-
-            return {
-                ...paquete,
-                diasTransito,
-                tarifaEstimada,
-            };
-        });
-
-        return NextResponse.json(paquetesEnriquecidos);
-    } catch (error: unknown) {
-        console.error("Error GET /api/paquetes:", error);
-        return NextResponse.json(
-            {
-                success: false,
-                error: "Error al obtener paquetes",
-                details:
-                    process.env.NODE_ENV === "development"
-                        ? (error as Error).message
-                        : undefined,
+          },
+          orderBy: {
+            envio: {
+              fechaSalida: "asc",
             },
-            { status: 500 }
-        );
-    }
+          },
+        },
+        detalleFactura: {
+          include: {
+            factura: {
+              include: {
+                cliente: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const paquetesEnriquecidos = paquetes.map((paquete) => {
+      let diasTransito = null;
+      let envioActual = null;
+
+      if (paquete.detalleEnvio.length > 0) {
+        envioActual = paquete.detalleEnvio[0].envio;
+
+        if (envioActual?.fechaSalida) {
+          const fechaSalida = new Date(envioActual.fechaSalida);
+          diasTransito = Math.floor(
+            (Date.now() - fechaSalida.getTime()) / (1000 * 60 * 60 * 24)
+          );
+        }
+      }
+
+      let tarifaEstimada = null;
+      if (envioActual) {
+        const volumenPiesCubicos =
+          (paquete.medidas.largo *
+            paquete.medidas.ancho *
+            paquete.medidas.alto) /
+          1728;
+
+        if (envioActual.tipo === "MARITIMO") {
+          tarifaEstimada = Math.max(volumenPiesCubicos * 25, 35);
+        } else if (envioActual.tipo === "AEREO") {
+          const porPeso = paquete.medidas.peso * 7;
+          const porVolumen = volumenPiesCubicos * 7;
+          tarifaEstimada = Math.max(Math.max(porPeso, porVolumen), 45);
+        }
+      }
+
+      return {
+        ...paquete,
+        diasTransito,
+        tarifaEstimada,
+      };
+    });
+
+    return NextResponse.json(paquetesEnriquecidos);
+  } catch (error: unknown) {
+    console.error("Error GET /api/paquetes:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Error al obtener paquetes",
+        details:
+          process.env.NODE_ENV === "development"
+            ? (error as Error).message
+            : undefined,
+      },
+      { status: 500 }
+    );
+  }
 }

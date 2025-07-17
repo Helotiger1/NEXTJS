@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Envio" ALTER COLUMN "fechaSalida" SET DATA TYPE TEXT,
+ALTER COLUMN "fechaLlegada" SET DATA TYPE TEXT;

@@ -11,7 +11,7 @@ export const Facturas = ({id}: {id?: string}) => {
 
     return (
         <>
-            <DynamicTable
+            <DynamicTable name="Facturas" 
                 data={data}
                 columns={columns}
                 rowsPerPage={8}></DynamicTable>

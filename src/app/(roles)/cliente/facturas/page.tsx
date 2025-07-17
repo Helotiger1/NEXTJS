@@ -5,7 +5,6 @@ import { Facturas } from "./components/Facturas";
 export default function page() {
     return (
         <>
-            <DynamicHeader h1Text="Tus facturas"></DynamicHeader>
             <Facturas></Facturas>
         </>
     );

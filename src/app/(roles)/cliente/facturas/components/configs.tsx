@@ -22,36 +22,44 @@ import { EstadoBadge } from "@/app/(roles)/(shared)/EstadoBadge";
 ];
 
 
+
 export const columns = [
-  { key: "name", label: "N° de Factura" },
-  { key: "fechaEmision", label: "Fecha de emisión" },
-  { key: "montoTotal", label: "Monto total" },
+  { key: "numero", label: "N° de Factura" },               // número factura
+  { key: "envioNum.fechaSalida", label: "Fecha de emisión", render: (value: string) => new Date(value).toLocaleDateString() },
+  { key: "monto", label: "Monto total", render: (value: number) => `$ ${value.toFixed(2)}` },
+  { key: "cantPiezas", label: "Cantidad de piezas" },
   {
-    key: 'estado',
-    label: 'Estado',
-    render: EstadoBadge
+    key: "estado",
+    label: "Estado",
+    render: EstadoBadge,
+  },
+  { key: "cliente.nombre", label: "Cliente" },
+  { key: "cliente.email", label: "Email" },
+  { key: "cliente.telefono", label: "Teléfono" },
+
+  {
+    key: "acciones_pago",
+    label: "Pagar",
+    render: (_: any, row: any) => (
+      <button
+        disabled={row.estado === "PAGADA"}
+        onClick={() => alert(`Proceder al pago de factura #${row.numero}`)}
+        className={`text-blue-600 underline px-2 py-1 rounded ${
+          row.estado === "PAGADA"
+            ? "opacity-50 cursor-not-allowed"
+            : "hover:text-blue-800"
+        }`}
+      >
+        Pagar deuda
+      </button>
+    ),
   },
   {
-  key: "acciones_pago",
-  label: "Pagar",
-  render: (_: any, row: any) => (
-    <button
-      disabled={row.estado === 'PAGADA'}
-      onClick={() => alert(`Proceder al pago de ${row.name}`)}
-      className={`text-blue-600 underline px-2 py-1 rounded 
-        ${row.estado === 'PAGADA' ? 'opacity-50 cursor-not-allowed' : 'hover:text-blue-800'}
-      `}
-    >
-      Pagar deuda
-    </button>
-  ),
-},
-    {
     key: "acciones",
     label: "Acciones",
     render: (_: any, row: any) => (
       <button
-        onClick={() => alert(`Detalles de (Aqui ira detalles) ${row.name}`)}
+        onClick={() => alert(`Detalles de factura #${row.numero}`)}
         className="text-blue-600 underline"
       >
         Ver detalles

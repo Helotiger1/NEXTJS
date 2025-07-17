@@ -15,7 +15,7 @@ export default function DynamicTable<T extends object>({
 }: DynamicTableProps<T>) {
     const [filtro, setFiltro] = useState(columns[0].key);
     const [busqueda, setBusqueda] = useState('');
-
+    console.log(data);
     const [page, setPage] = useState(0);
 
     const filteredData = busqueda

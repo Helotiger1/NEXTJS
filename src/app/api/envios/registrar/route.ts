@@ -1,119 +1,130 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/prisma";
-
+import { convertirNumeros } from "@/app/lib/axios";
+import { Prisma, EstadoPaquete } from "@prisma/client";
+import { validarEstadoPaqueteString } from "@/app/lib/Validaciones_Paquetes";
 
 // POST: Registrar un nuevo envío
 export async function POST(req: NextRequest) {
-    try {
-        const body = await req.json();
-        const {
-            tipo,
-            almacenOrigen,
-            almacenEnvio,
-            paquetes
-        } = body;
+  try {
+    const body = await req.json();
 
+    const paquetes = body.paquetes;
+    const bodyConvertido = convertirNumeros(body);
 
-        const empleadoCedula = 4;
-        const estado = 'REGISTRADO';
-        const fechaSalida = new Date();
-        const fechaLlegada = new Date();
-        console.log("📦 Datos recibidos para registrar envío:", body);
+    const {
+      tipo,
+      almacenOrigen,
+      almacenEnvio
+    } = bodyConvertido;
 
+    const userId = req.headers.get('userId');
+    const empleadoCedula = userId ? Number(userId) : null;
+    const estado = 'EN TRANSITO';
+    const fechaSalida = new Date();
+    const fechaLlegada = new Date();
 
-
-        if (!["BARCO", "AVION"].includes(tipo)) {
-            return NextResponse.json(
-                { success: false, error: "Tipo de envío inválido" },
-                { status: 400 }
-            );
-        }
-
-        if (almacenOrigen === almacenEnvio) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: "El almacén origen y destino no pueden ser iguales",
-                },
-                { status: 400 }
-            );
-        }
-
-        // Validar existencia de almacenes y empleado
-        const [origen, destino, empleado] = await Promise.all([
-            prisma.almacen.findUnique({ where: { codigo: almacenOrigen } }),
-            prisma.almacen.findUnique({ where: { codigo: almacenEnvio } }),
-            prisma.usuario.findUnique({ where: {id : empleadoCedula} }),
-        ]);
-
-        if (!origen || !destino || !empleado) {
-            return NextResponse.json(
-                { success: false, error: "Almacén o empleado no encontrado" },
-                { status: 404 }
-            );
-        }
-
-        // Crear el envío y asociar paquetes
-        const nuevoEnvio = await prisma.envio.create({
-            data: {
-                tipo,
-                estado,
-                fechaSalida,
-                fechaLlegada,
-                almacenOrigen,
-                almacenEnvio,
-                empleadoCedula,
-                detalleEnvio: {
-                    create: paquetes.map((obj) => ({
-                        paquete: { connect: { tracking : obj.tracking } },
-                    })),
-                },
-            },
-            include: {
-                detalleEnvio: true,
-            },
-        });
-
-        console.log("✅ Envío creado con éxito:", nuevoEnvio);
-
-        return NextResponse.json(
-            { success: true, data: nuevoEnvio },
-            { status: 201 }
-        );
-    } catch (error) {
-        console.error("❌ Error al registrar envío:", error);
-        return NextResponse.json(
-            {
-                success: false,
-                error: "Error al registrar el envío",
-                details:
-                    process.env.NODE_ENV === "development"
-                        ? (error as Error).message
-                        : undefined,
-            },
-            { status: 500 }
-        );
+    if (!["BARCO", "AVION"].includes(tipo)) {
+      return NextResponse.json(
+        { success: false, error: "Tipo de envío inválido" },
+        { status: 400 }
+      );
     }
+
+    if (almacenOrigen === almacenEnvio) {
+      return NextResponse.json(
+        { success: false, error: "El almacén origen y destino no pueden ser iguales" },
+        { status: 400 }
+      );
+    }
+
+    if (!Array.isArray(paquetes) || paquetes.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Debe seleccionar al menos un paquete" },
+        { status: 400 }
+      );
+    }
+
+    // Validar existencia de almacenes y empleado
+    const [origen, destino, empleado] = await Promise.all([
+      prisma.almacen.findUnique({ where: { codigo: almacenOrigen } }),
+      prisma.almacen.findUnique({ where: { codigo: almacenEnvio } }),
+      prisma.usuario.findUnique({ where: { id: empleadoCedula ?? undefined } }),
+    ]);
+
+    if (!origen || !destino || !empleado) {
+      return NextResponse.json(
+        { success: false, error: "Almacén o empleado no encontrado" },
+        { status: 404 }
+      );
+    }
+
+    // 🛑 Validar que todos los paquetes estén en estado REGISTRADO
+    const trackings = paquetes.map((p: any) => p.tracking);
+    const paquetesDB = await prisma.paquete.findMany({
+      where: { tracking: { in: trackings } },
+      select: { tracking: true, estado: true }
+    });
+
+    const paquetesInvalidos = paquetesDB.filter(
+      (p) => p.estado !== 'REGISTRADO'
+    );
+
+    if (paquetesInvalidos.length > 0) {
+      const detalles = paquetesInvalidos.map(p => `📦 ${p.tracking} → estado: ${p.estado}`);
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Uno o más paquetes no están disponibles para enviar",
+          detalles,
+        },
+        { status: 400 }
+      );
+    }
+
+    // ✅ Crear el envío
+    const nuevoEnvio = await prisma.envio.create({
+      data: {
+        tipo,
+        estado,
+        fechaSalida,
+        fechaLlegada,
+        almacenOrigen,
+        almacenEnvio,
+        empleadoCedula,
+        detalleEnvio: {
+          create: paquetes.map((obj: any) => ({
+            paquete: { connect: { tracking: obj.tracking } },
+          })),
+        },
+      },
+      include: {
+        detalleEnvio: true,
+      },
+    });
+
+    // ✅ Actualizar estado de los paquetes a EN_TRANSITO
+    await prisma.paquete.updateMany({
+      where: { tracking: { in: trackings } },
+      data: { estado: 'EN_TRANSITO' }
+    });
+
+    return NextResponse.json(
+      { success: true, data: nuevoEnvio },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("❌ Error al registrar envío:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Error al registrar el envío",
+        details: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+      },
+      { status: 500 }
+    );
+  }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 export async function GET(req: NextRequest) {
     try {

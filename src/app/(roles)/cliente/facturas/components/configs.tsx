@@ -54,18 +54,6 @@ export const columns = [
       </button>
     ),
   },
-  {
-    key: "acciones",
-    label: "Acciones",
-    render: (_: any, row: any) => (
-      <button
-        onClick={() => alert(`Detalles de factura #${row.numero}`)}
-        className="text-blue-600 underline"
-      >
-        Ver detalles
-      </button>
-    ),
-  },
 ];
 
 

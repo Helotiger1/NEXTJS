@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
       email: body.email,
       telefono: body.telefono,
       contrasena: body.contrasena,
+      activo: body.activo !== undefined ? body.activo : true, // Por defecto activo
       rol: body.rol || Rol.CLIENTE, // Valor por defecto
     };
 
@@ -78,6 +79,7 @@ export async function POST(req: NextRequest) {
           email: datosTransformados.email,
           telefono: datosTransformados.telefono,
           contrasena: hashedPassword,
+          activo: datosTransformados.activo,
         },
       });
 
@@ -98,8 +100,11 @@ export async function POST(req: NextRequest) {
         data: {
           id: nuevoUsuario.id,
           cedula: nuevoUsuario.cedula,
+          telefono: nuevoUsuario.telefono,
+          apellido: nuevoUsuario.apellido,
           nombre: nuevoUsuario.nombre,
           email: nuevoUsuario.email,
+          activo: nuevoUsuario.activo,
           rol: datosTransformados.rol,
         },
       },
@@ -131,7 +136,9 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search");
 
     // Construir objeto WHERE para Prisma
-    const where: Prisma.UsuarioWhereInput = {};
+    const where: Prisma.UsuarioWhereInput = {
+      activo: true, // Por defecto solo usuarios activos
+    };
 
     // Filtro por rol
     if (rol && Object.values(Rol).includes(rol as Rol)) {

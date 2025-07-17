@@ -11,8 +11,8 @@ import { Prisma } from "@prisma/client";
 // POST: Crear nuevo paquete
 export async function POST(req: NextRequest) {
   try {
-        const userId = req.headers.get('userId');
-            console.log(userId);
+    const userId = req.headers.get('userId');
+    console.log(userId);
     const body = await req.json();
     console.log("Datos recibidos:", body);
 
@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
       tipoEnvio,
     } = body;
 
-    const empleadoId = 2; //aqui iria el id del empleado que esta haciendo la peticion, por ahora lo dejamos estatico
+    const empleadoId = userId ? parseInt(userId, 10) : null; //user id tiene el id del empleado que está haciendo la petición
+
     const almacenCodigo = origenId;
 
     const { 
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
       descripcion,
       estado,
       almacenCodigo: Number(almacenCodigo),
-      empleadoId,
+      empleadoId: empleadoId ?? undefined,
       origenId: Number(origenId),
       destinoId: Number(destinoId),
       clienteOrigenId: Number(clienteOrigenId),
@@ -111,7 +112,7 @@ export async function POST(req: NextRequest) {
 
     const [almacen, empleado, origen, destino, clienteOrigen, clienteDestino] = await Promise.all([
       prisma.almacen.findUnique({ where: { codigo: processedData.almacenCodigo } }),
-      prisma.usuario.findUnique({ where: { id: empleadoId }, include: { roles: true } }),
+      prisma.usuario.findUnique({ where: { id: empleadoId ?? undefined }, include: { roles: true } }),
       prisma.almacen.findUnique({ where: { codigo: processedData.origenId } }),
       prisma.almacen.findUnique({ where: { codigo: processedData.destinoId } }),
       prisma.usuario.findUnique({ where: { id: processedData.clienteOrigenId }, include: { roles: true } }),

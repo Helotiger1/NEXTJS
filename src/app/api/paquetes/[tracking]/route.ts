@@ -8,6 +8,8 @@ import {
 // PUT: Actualizar paquete por tracking
 export async function PUT(req: NextRequest, { params }: { params: { tracking: string } }) {
   try {
+    const userId = req.headers.get('userId');
+    console.log(userId);
     const tracking = Number(params.tracking);
     console.log("🔄 [PUT] Tracking recibido:", params.tracking);
 
@@ -26,7 +28,6 @@ export async function PUT(req: NextRequest, { params }: { params: { tracking: st
       clienteOrigenId,
       clienteDestinoId,
       almacenCodigo,
-      empleadoId,
       medidas = {},
     } = body;
 
@@ -44,7 +45,6 @@ export async function PUT(req: NextRequest, { params }: { params: { tracking: st
       { field: "clienteOrigenId", value: clienteOrigenId },
       { field: "clienteDestinoId", value: clienteDestinoId },
       { field: "almacenCodigo", value: almacenCodigo },
-      { field: "empleadoId", value: empleadoId },
     ];
 
     for (const { field, value } of numericFields) {
@@ -55,6 +55,17 @@ export async function PUT(req: NextRequest, { params }: { params: { tracking: st
           { status: 400 }
         );
       }
+    }
+    
+    // Validar empleadoId desde userId (header)
+    const empleadoId = userId ? Number(userId) : undefined;
+
+    if (!empleadoId || isNaN(empleadoId) || empleadoId <= 0) {
+      console.warn("❌ userId inválido en el header:", userId);
+      return NextResponse.json(
+        { success: false, error: "Empleado no autenticado o ID inválido" },
+        { status: 401 }
+      );
     }
 
     const { largo = 0, ancho = 0, alto = 0, peso = 0 } = medidas;

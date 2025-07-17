@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-indigo-900 to-blue-950 text-white overflow-hidden">
       <nav className="bg-transparent px-8 py-3 flex justify-between items-center relative z-10">
-        <h1 className="text-2xl font-extrabold text-blue-300 md:text-3xl">CargoTruck</h1>
+        <h1 className="text-2xl font-extrabold text-blue-300 md:text-3xl">CargoTrack</h1>
         <div className="space-x-3 md:space-x-4">
           <Link
             href="/login?tipo=cliente"
@@ -26,7 +26,10 @@ export default function Home() {
 
       <section className="flex-grow flex items-center justify-center px-4 py-4 md:px-6 md:py-8 relative z-0">
         <div className="text-center max-w-2xl bg-black bg-opacity-40 p-6 md:p-10 rounded-xl shadow-2xl backdrop-blur-sm border border-blue-700/30">
-          <h2 className="text-3xl font-extrabold text-white mb-3 leading-tight md:text-5xl md:mb-6">
+          <h2 className="
+            text-3xl font-extrabold text-white mb-3 leading-tight md:text-5xl md:mb-6
+            transition-colors duration-300 ease-in-out hover:text-purple-400
+          ">
             Transporte que mueve el futuro
           </h2>
           <p className="text-base text-blue-200 mb-4 leading-relaxed md:text-xl md:mb-8">
